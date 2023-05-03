@@ -4,20 +4,30 @@ import os
 import subprocess
 import json
 import sys
-
-from pprint import pprint
+import shutil
 
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import TextLoader
 from langchain.vectorstores import Chroma
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
 
-SCRIPT_DIR = sys.path[0]
 
-output = subprocess.check_output("pass show openai/api-key", shell=True)
-os.environ["OPENAI_API_KEY"] = output.decode().strip()
+def openai_key():
+    """Get the OpenAI API key."""
+    if os.environ.get("OPENAI_API_KEY"):
+        return os.environ.get("OPENAI_API_KEY")
+    # try retrieve from a cached global variable to avoid calling subprocess
+    # if not found, call subprocess and cache it
+
+    if not hasattr(openai_key, "key"):
+        openai_key.key = (
+            subprocess.check_output("pass show openai/api-key", shell=True)
+            .decode("utf-8")
+            .strip()
+        )
+    return openai_key.key
 
 
 class Librarian:
@@ -28,11 +38,9 @@ class Librarian:
         self.book_name = book_name
         self.book_file = book_file
 
+        os.environ["OPENAI_API_KEY"] = openai_key()
         self.embedding = OpenAIEmbeddings()
 
-        self.text_splitter = CharacterTextSplitter(
-            chunk_size=2000, chunk_overlap=10
-        )
         self.chroma_dir = "/home/shou/tmp/chroma"
         self._vectordb = None
 
@@ -78,7 +86,9 @@ class Librarian:
     def load_documents(self):
         """Load the documents from the book file."""
         loader = TextLoader(self.book_file)
-        splitter = CharacterTextSplitter(chunk_size=2000, chunk_overlap=10)
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=200, chunk_overlap=0
+        )
         documents = splitter.split_documents(loader.load())
         for id, doc in enumerate(documents):
             doc.metadata["cite_id"] = id
@@ -114,7 +124,7 @@ class Librarian:
 
             shutil.rmtree(self.chroma_dir)
 
-    def narrow_down_documents(self, vectordb, question, k=3):
+    def narrow_down_documents(self, vectordb, question, k=10):
         """Narrow down the documents to the most relevant."""
         retriever = vectordb.as_retriever(
             search_type="mmr", search_kwargs={"k": k}
@@ -123,7 +133,7 @@ class Librarian:
 
     def chat(self):
         """Get a chatbot."""
-        return ChatOpenAI(temperature=0)
+        return ChatOpenAI(temperature=0.5)
 
     def ask_question(self, question):
         """Ask the librarian a question."""
@@ -151,14 +161,22 @@ class Librarian:
 def interactive(librarian):
     """Ask questions interactively."""
     while True:
-        question = input("Question: ")
+        try:
+            question = input("Question: ")
+        except EOFError:
+            break
+
+        if question.strip() == "":
+            continue
         resp = librarian.ask_question(question)
         if "error" in resp:
             print(resp["error"])
         else:
-            print(">>> " + resp["answer"])
-            print("")
-            print("Quote: " + resp["quote"] + "\n")
+            print("Answer: " + resp["answer"].strip())
+            if resp["quote"] != "":
+                print("\n> " + resp["quote"].strip())
+            # print a horizontal rule the width of the terminal
+            print("-" * shutil.get_terminal_size().columns)
 
 
 def librarian():
@@ -170,8 +188,20 @@ def librarian():
 
 def main():
     """Entry point."""
-    l = librarian()
-    interactive(l)
+
+    if len(sys.argv) != 2:
+        print("Usage: python -m {} <rebuild|chat>".format(sys.argv[0]))
+        return
+
+    if sys.argv[1] == "rebuild":
+        lib = librarian()
+        lib.clear_collection()
+        lib.vectordb(force_rebuild=True)
+        print("Rebuilt collection.")
+        return
+    elif sys.argv[1] == "chat":
+        interactive(librarian())
+        return
 
 
 if __name__ == "__main__":
