@@ -223,7 +223,7 @@ def interactive(librarian):
         last_answer = resp
 
 
-def librarian():
+def default_librarian():
     """Get a librarian."""
     return Librarian(
         "A Sport and a Pastime", "/home/shou/tmp/book/book.txt"
@@ -246,16 +246,14 @@ def main():
         return
 
     if sys.argv[1] == "rebuild":
-        lib = librarian()
+        lib = default_librarian()
         lib.clear_collection()
         lib.vectordb(force_rebuild=True)
         print("Rebuilt collection.")
-        return
     elif sys.argv[1] == "chat":
-        interactive(librarian())
-        return
+        interactive(default_librarian())
     elif sys.argv[1] == "peek_docs":
-        peek_docs(librarian())
+        peek_docs(default_librarian())
 
 
 if __name__ == "__main__":
