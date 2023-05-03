@@ -1,5 +1,3 @@
-"""The entry point for the LangChain library."""
-
 import os
 import subprocess
 import json
@@ -41,7 +39,8 @@ class Librarian:
         os.environ["OPENAI_API_KEY"] = openai_key()
         self.embedding = OpenAIEmbeddings()
 
-        self.chroma_dir = "/home/shou/tmp/chroma"
+        # store it in the xdg cache
+        self.chroma_dir = os.path.expanduser("~/.cache/librarian/chroma")
         self._vectordb = None
 
     def prompt(self, documents, question):
@@ -121,6 +120,11 @@ class Librarian:
                 embedding_function=self.embedding,
             )
         else:
+            os.makedirs(self.chroma_dir, exist_ok=True)
+            shutil.copyfile(
+                self.book_file, os.path.join(self.chroma_dir, "book.txt")
+            )
+
             documents = self.load_documents()
             vectordb = Chroma.from_documents(
                 persist_directory=self.chroma_dir,
