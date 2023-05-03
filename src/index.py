@@ -83,13 +83,28 @@ class Librarian:
 
         return chat_prompt
 
+    def load_raw_documents(self):
+        """Load the raw documents from the book file."""
+        if self.book_file.endswith(".txt"):
+            loader = TextLoader(self.book_file)
+        elif self.book_file.endswith(".epub"):
+            loader = UnstructuredEPubLoader(
+                self.book_file, mode="elements"
+            )
+        else:
+            raise ValueError(
+                f"Unsupported file type: {self.book_file}. "
+                + "Only .txt and .epub are supported."
+            )
+
+        return loader.load()
+
     def load_documents(self):
-        """Load the documents from the book file."""
-        loader = TextLoader(self.book_file)
+        """Load the documents from the book file and split to chunks."""
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=200, chunk_overlap=0
         )
-        documents = splitter.split_documents(loader.load())
+        documents = splitter.split_documents(self.load_raw_documents())
         for id, doc in enumerate(documents):
             doc.metadata["cite_id"] = id
             doc.metadata["book"] = self.book_name
@@ -186,11 +201,19 @@ def librarian():
     )
 
 
+def peek_docs(librarian):
+    """Peek at the documents."""
+    import pprint
+
+    docs = librarian.load_raw_documents()[0:1000]
+    for doc in docs:
+        pprint.pprint(doc)
+
+
 def main():
     """Entry point."""
-
     if len(sys.argv) != 2:
-        print("Usage: python -m {} <rebuild|chat>".format(sys.argv[0]))
+        print("Usage: python3 librarian.py [rebuild|chat|peek_docs]")
         return
 
     if sys.argv[1] == "rebuild":
@@ -202,6 +225,8 @@ def main():
     elif sys.argv[1] == "chat":
         interactive(librarian())
         return
+    elif sys.argv[1] == "peek_docs":
+        peek_docs(librarian())
 
 
 if __name__ == "__main__":
