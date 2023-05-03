@@ -180,7 +180,11 @@ class Librarian:
 
 def interactive(librarian):
     """Ask questions interactively."""
+    last_answer = None
+
     while True:
+        width = shutil.get_terminal_size().columns
+
         try:
             question = input("Question: ")
         except EOFError:
@@ -188,24 +192,35 @@ def interactive(librarian):
 
         if question.strip() == "":
             continue
+
+        if question.strip() == "!refs" or question.strip() == "!r":
+            if last_answer is None:
+                print("No previous answer.")
+                continue
+
+            for i, rel_doc in enumerate(last_answer["rel_docs"]):
+                print(
+                    # f"\nDocument {i}: {rel_doc.page_content.strip()[:width-20]}"
+                    f"\nDocument {i}: {rel_doc.page_content.strip()}"
+                )
+            print("-" * width)
+            continue
+
+        if question.strip() == "!quit" or question.strip() == "!q":
+            break
+
         resp = librarian.ask_question(question)
 
         if "error" in resp:
             print(resp["error"])
             continue
 
-        width = shutil.get_terminal_size().columns
-
-        for i, rel_doc in enumerate(resp["rel_docs"]):
-            print(
-                # f"\nDocument {i}: {rel_doc.page_content.strip()[:width-20]}"
-                f"\nDocument {i}: {rel_doc.page_content.strip()}"
-            )
         print("Answer: " + resp["answer"].strip())
         if resp["quote"] != "":
             print("\n> " + resp["quote"].strip())
 
         print("-" * width)
+        last_answer = resp
 
 
 def librarian():
