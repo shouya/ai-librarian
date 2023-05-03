@@ -8,7 +8,7 @@ import shutil
 
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import TextLoader, UnstructuredEPubLoader
 from langchain.vectorstores import Chroma
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
@@ -167,6 +167,7 @@ class Librarian:
             return {"error": parsed["error"]}
 
         return {
+            "rel_docs": documents,
             "answer": parsed["answer"],
             # "refs": parsed["refs"],
             "quote": parsed["quote"],
@@ -184,14 +185,23 @@ def interactive(librarian):
         if question.strip() == "":
             continue
         resp = librarian.ask_question(question)
+
         if "error" in resp:
             print(resp["error"])
-        else:
-            print("Answer: " + resp["answer"].strip())
-            if resp["quote"] != "":
-                print("\n> " + resp["quote"].strip())
-            # print a horizontal rule the width of the terminal
-            print("-" * shutil.get_terminal_size().columns)
+            continue
+
+        width = shutil.get_terminal_size().columns
+
+        for i, rel_doc in enumerate(resp["rel_docs"]):
+            print(
+                # f"\nDocument {i}: {rel_doc.page_content.strip()[:width-20]}"
+                f"\nDocument {i}: {rel_doc.page_content.strip()}"
+            )
+        print("Answer: " + resp["answer"].strip())
+        if resp["quote"] != "":
+            print("\n> " + resp["quote"].strip())
+
+        print("-" * width)
 
 
 def librarian():
