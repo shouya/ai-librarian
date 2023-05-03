@@ -1,4 +1,5 @@
 import os
+import atexit
 import subprocess
 import json
 import sys
@@ -180,6 +181,18 @@ class Librarian:
 
 def interactive(librarian):
     """Ask questions interactively."""
+    import readline
+
+    # use readline to get input, save history in ~/.cache/librarian/history
+    readline.parse_and_bind("tab: complete")
+    histfile = os.path.expanduser("~/.cache/librarian/history")
+    try:
+        readline.read_history_file(histfile)
+        readline.set_history_length(1000)
+    except FileNotFoundError:
+        pass
+    atexit.register(readline.write_history_file, histfile)
+
     last_answer = None
 
     while True:
