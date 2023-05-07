@@ -1,4 +1,4 @@
-* AI Librarian
+** AI Librarian
 
 It allows you to ask any questions about a book in epub format.
 
@@ -6,19 +6,19 @@ I often lose track of the plot while reading a book. Sometimes I forget who a ch
 
 AI Librarian makes use of OpenAI's embedding and GPT-3.5 chat API.
 
-* Features
+** Features
 
 - *A [novel approach](https://github.com/shouya/ai-librarian/blob/master/ai_librarian/retriever.py#L47) to dynamically extend relevant context*, resulting in high retrieval accuracy comparing to the naive knowledge-base question-answering approach
 - The book is indexed on first opening, and then cached for future use
 - Input history is saved across sessions
 
-* Cost
+** Cost
 
 For reference, a book of ~200 pages (~50K words, ~70K tokens) costs $0.055 to index. This is a one-time cost, and the book is cached for future use.
 
 Each question asked costs usually about $0.0015. The cost can float up and down depending on the question.
 
-* Usage
+** Usage
 
 #+begin_src bash
 $ export OPENAI_API_KEY=sk-...
@@ -61,7 +61,7 @@ Document 3: “The very heart. It’s a small town, but it has a certain quality
 ---------------------------------------------------------------------------------------------------------
 #+end_src
 
-* Other usages
+** Other usages
 
 You may notice from the demo that the command `!r` is used to retrieve the referenced portion of the book for the question.
 
@@ -80,6 +80,6 @@ $ ai-librarian rebuild -f <path/to/book.epub>
 #+end_src
 
 
-* Acknowledgments
+** Acknowledgments
 
 This tool was built on my re-invention of LangChain components. The design was heavily influenced by, and some utility functions are taken directly from, the LangChain library.
