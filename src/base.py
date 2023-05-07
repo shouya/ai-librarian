@@ -53,3 +53,22 @@ class Retriever(ABC):
         self, query: str, k: int, **kwargs: Any
     ) -> List[Document]:
         """Retrieve the k most relevant documents to the query"""
+
+
+class Embedder(ABC):
+    @abstractmethod
+    def embed_texts(self, texts: List[str]) -> List[Embedding]:
+        """Create embeddings for the texts"""
+
+    @abstractmethod
+    def embed_text(self, text: str):
+        """Create an embedding for a single text"""
+        return self.embed_texts([text])[0]
+
+    @abstractmethod
+    def embed_docs(self, docs: List[Document]):
+        """Create embeddings for the documents"""
+        texts = [doc.content for doc in docs]
+        embeddings = self.embed_texts(texts)
+        for doc, embedding in zip(docs, embeddings):
+            doc.embedding = embedding
