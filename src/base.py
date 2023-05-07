@@ -99,3 +99,9 @@ class Embedder(ABC):
         embeddings = self.embed_texts(texts)
         for doc, embedding in zip(docs, embeddings):
             doc.embedding = embedding
+
+
+class Retriever(ABC):
+    @abstractmethod
+    def retrieve_by_embedding(self, query: str, k: int) -> List[Document]:
+        """Retrieve the k most relevant documents to the query"""
