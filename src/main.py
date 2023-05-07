@@ -5,16 +5,6 @@ import json
 import sys
 import shutil
 
-import openai
-
-from langchain.schema import HumanMessage, SystemMessage
-from langchain.chat_models import ChatOpenAI
-
-from loader import EpubBookLoader
-from embedder import OpenAIEmbedder
-from doc_store import ChromaDocStore
-from retriever import ContextualBookRetriever
-
 
 def openai_key():
     """Get the OpenAI API key."""
@@ -30,6 +20,16 @@ def openai_key():
             .strip()
         )
     return openai_key.key
+os.environ["OPENAI_API_KEY"] = openai_key()
+
+from langchain.schema import HumanMessage, SystemMessage
+from langchain.chat_models import ChatOpenAI
+
+from loader import EpubBookLoader
+from embedder import OpenAIEmbedder
+from doc_store import ChromaDocStore
+from retriever import ContextualBookRetriever
+
 
 
 class Librarian:
@@ -42,7 +42,6 @@ class Librarian:
         self.loader = EpubBookLoader(book_file)
         self.book_id = self.loader.book_id()
 
-        openai.api_key = openai_key()
         self.embedder = OpenAIEmbedder()
 
         # make doc store persist in the xdg cache
@@ -68,9 +67,13 @@ class Librarian:
             + "You will be given the relevant portions of "
             + "the books in following messages.\n"
         )
+
         docs_json = [
-            # {"content": d.content, "ref": str(d.id)}
-            {"content": d.content}
+            {
+                "content": d.content,
+                # "ref": str(d.id),
+                # "chapter": d.metadata["chapter_title"],
+            }
             for d in documents
         ]
         docs_msg = json.dumps(docs_json)
@@ -107,9 +110,9 @@ class Librarian:
 
         docs = []
         # chapter-level embeddings are not very useful from my experiments
-        docs.extend(self.loader.split_chapter_docs())
+        # docs.extend(self.loader.split_chapter_docs())
         docs.extend(self.loader.split_paragraph_docs())
-        # docs.extend(self.loader.split_sentence_docs())
+        docs.extend(self.loader.split_sentence_docs())
 
         self.embedder.embed_docs(docs)
 
@@ -118,7 +121,7 @@ class Librarian:
 
     def narrow_down_documents(self, question):
         """Narrow down the documents to a few relevant ones."""
-        return self.retriever.retrieve(question, 10)
+        return self.retriever.retrieve(question, 4)
 
     def chat(self):
         """Get a chatbot."""
@@ -126,7 +129,8 @@ class Librarian:
 
     def ask_question(self, question):
         """Ask the librarian a question."""
-        return {"rel_docs": [], "answer": "DUMMY", "quote": "DUMMY"}
+        # Uncomment for debugging
+        # return {"rel_docs": [], "answer": "DUMMY", "quote": "DUMMY"}
 
         documents = self.narrow_down_documents(question)
         prompt = self.prompt(documents, question)
@@ -198,7 +202,7 @@ def interactive(librarian):
         resp = librarian.ask_question(question)
 
         if "error" in resp:
-            print(resp["error"])
+            print(f"Error: {resp['error']}")
             continue
 
         print("Answer: " + resp["answer"].strip())
