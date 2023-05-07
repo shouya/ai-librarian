@@ -8,7 +8,7 @@ AI Librarian makes use of OpenAI's embedding and GPT-3.5 chat API.
 
 * Features
 
-- *A novel approach to dynamically extended relevant context*, resulting in high retrieval accuracy comparing to the naive knowledge-base question-answering approach
+- *A [novel approach](https://github.com/shouya/ai-librarian/blob/master/ai_librarian/retriever.py#L47) to dynamically extend relevant context*, resulting in high retrieval accuracy comparing to the naive knowledge-base question-answering approach
 - The book is indexed on first opening, and then cached for future use
 - Input history is saved across sessions
 
