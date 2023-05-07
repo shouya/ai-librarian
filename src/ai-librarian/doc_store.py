@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import List, Any
 
-from base import DocStore, Document, DocId, Embedding
+from .base import DocStore, Document, DocId, Embedding
 
 
 class ChromaDocStore(DocStore):

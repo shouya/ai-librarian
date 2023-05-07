@@ -4,7 +4,7 @@ import epub_meta
 from bs4 import BeautifulSoup as BS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from base import Document
+from .base import Document
 
 import pprint
 

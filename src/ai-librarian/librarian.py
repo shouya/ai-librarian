@@ -8,10 +8,11 @@ import shutil
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
 
-from loader import EpubBookLoader
-from embedder import OpenAIEmbedder
-from doc_store import ChromaDocStore
-from retriever import ContextualBookRetriever
+from .loader import EpubBookLoader
+from .embedder import OpenAIEmbedder
+from .doc_store import ChromaDocStore
+from .retriever import ContextualBookRetriever
+
 
 class Librarian:
     """A librarian that answers questions about a book."""

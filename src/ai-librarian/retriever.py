@@ -2,7 +2,7 @@ import langchain
 
 import numpy as np
 
-from base import Retriever, Embedding, Document
+from .base import Retriever, Embedding, Document
 
 
 class ContextualBookRetriever(Retriever):

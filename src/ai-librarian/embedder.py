@@ -1,7 +1,7 @@
 import openai
 import numpy as np
 
-from base import Embedding, Embedder
+from .base import Embedding, Embedder
 
 
 class OpenAIEmbedder(Embedder):
