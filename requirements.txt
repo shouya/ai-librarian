@@ -7,3 +7,4 @@ ebooklib
 beautifulsoup4
 chroma
 pydantic-numpy
+click

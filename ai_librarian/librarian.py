@@ -17,10 +17,8 @@ from .retriever import ContextualBookRetriever
 class Librarian:
     """A librarian that answers questions about a book."""
 
-    def __init__(self, book_name, book_file):
+    def __init__(self, book_file):
         """Initialize the librarian."""
-        self.book_name = book_name
-
         self.loader = EpubBookLoader(book_file)
         self.book_id = self.loader.book_id()
 
@@ -44,8 +42,7 @@ class Librarian:
             raise ValueError("No documents provided.")
 
         sys_msg = (
-            "You are a helpful assistant that answers questions "
-            + f"about the book {self.book_name}. \n"
+            "You are a helpful assistant that answers questions about a book.\n"
             + "You will be given the relevant portions of "
             + "the books in following messages.\n"
         )
@@ -195,22 +192,6 @@ def interactive(librarian):
         last_answer = resp
 
 
-def default_librarian():
-    """Get a librarian."""
-    return Librarian(
-        "A Sport and a Pastime", "/home/shou/tmp/book/book.epub"
-    )
-
-
-def peek_docs(librarian):
-    """Peek at the documents."""
-    import pprint
-
-    docs = librarian.load_documents()[0:1000]
-    for doc in docs:
-        pprint.pprint(doc)
-
-
 def debug_query(librarian):
     setup_readline()
 
@@ -226,27 +207,3 @@ def debug_query(librarian):
             print(doc.content)
             print()
         print("-" * width)
-
-
-def main():
-    """Entry point."""
-    if len(sys.argv) != 2:
-        print(
-            "Usage: python3 librarian.py [rebuild|chat|peek_docs|debug_query]"
-        )
-        return
-
-    if sys.argv[1] == "rebuild":
-        lib = default_librarian()
-        lib.reload_book()
-        print("Rebuilt collection.")
-    elif sys.argv[1] == "chat":
-        interactive(default_librarian())
-    elif sys.argv[1] == "peek_docs":
-        peek_docs(default_librarian())
-    elif sys.argv[1] == "debug_query":
-        debug_query(default_librarian())
-
-
-if __name__ == "__main__":
-    main()

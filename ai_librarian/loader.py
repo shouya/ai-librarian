@@ -8,23 +8,6 @@ from .base import Document
 
 import pprint
 
-"""
-The structure of a parsed book:
-{
-    "title": "<TITLE>",
-    "chapters": [
-        {
-          "index": <NO>,
-          "title": "<TITLE>",
-          "paragraphs": [
-            "<PARAGRAPH>",
-          ]
-        },
-        ...
-    ]
-}
-"""
-
 
 class EpubBookLoader:
     epub = None
