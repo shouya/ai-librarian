@@ -1,9 +1,10 @@
 import ebooklib
+import ebooklib.epub
 import epub_meta
 from bs4 import BeautifulSoup as BS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from .base import Document
+from base import Document
 
 import pprint
 
@@ -25,8 +26,10 @@ The structure of a parsed book:
 """
 
 
-class BookLoader(ABC):
-    """Load and parse the structure of a source book file"""
+class EpubBookLoader:
+    epub = None
+    chapters = None
+    doc_index = {}
 
     def __init__(self, file_path):
         """Initialize a book loader"""
@@ -34,26 +37,22 @@ class BookLoader(ABC):
 
     def parse_book(self):
         """Parse the book file"""
-        raise NotImplementedError
-
-    def split_chapter_docs(self):
-        pass
-
-    def store_docs(self, docs):
-        pass
-
-    def load(self):
-
-
-class EpubBookLoader(BookLoader):
-    epub = None
-    chapters = None
-    doc_index = {}
-
-    def parse_book(self):
-        """Parse the book file"""
-        self.epub = ebooklib.epub.read_epub(self.file_path)
+        load_opts = {"ignore_ncx": True}
+        self.epub = ebooklib.epub.read_epub(self.file_path, load_opts)
         self.chapters = self._parse_chapters(self.epub)
+
+    def book_id(self):
+        """Calculate the id of the book (sha1 hash of the file)"""
+        import hashlib
+
+        sha1 = hashlib.sha1()
+        with open(self.file_path, "rb") as f:
+            while True:
+                data = f.read(65536)
+                if not data:
+                    break
+                sha1.update(data)
+        return sha1.hexdigest()[:32]
 
     def _parse_chapters(self, epub):
         """Parse the chapters of the book"""
@@ -87,11 +86,10 @@ class EpubBookLoader(BookLoader):
                     "chapter_index": chapter["index"],
                     "chapter_title": chapter["title"],
                 },
-                embedding = None
+                embedding=None,
             )
             docs.append(doc)
         return docs
-
 
     def _split_docs(self, level, splitter_conf):
         splitter = RecursiveCharacterTextSplitter(**splitter_conf)
@@ -99,7 +97,7 @@ class EpubBookLoader(BookLoader):
 
         for whole_doc in self.whole_chapter_docs():
             chapter_index = whole_doc.metadata["chapter_index"]
-            split_docs = splitter.create_documents([doc.content])
+            split_docs = splitter.create_documents([whole_doc.content])
 
             for part_no, split_doc in enumerate(split_docs):
                 metadata = whole_doc.metadata.copy()
@@ -109,13 +107,13 @@ class EpubBookLoader(BookLoader):
                 part = f"{part_no+1}/{len(split_docs)}"
                 id = f"{level}:{chapter_index}:{part}"
 
-                content = split_doc.content()
+                content = split_doc.page_content
 
                 doc = Document(
                     id=id,
-                    content=content
+                    content=content,
                     metadata=metadata,
-                    embedding = None
+                    embedding=None,
                 )
                 docs.append(doc)
 

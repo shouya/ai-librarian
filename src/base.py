@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, NewType, Any, Self
+from typing import Optional, List, NewType, Any
+
 from pydantic import BaseModel
 import numpy as np
 
-Embedding = NewType("Embedding", np.ndarray[float])
+from pydantic_numpy import NDArrayFp32
+
+Embedding = NewType("Embedding", NDArrayFp32)
 Score = NewType("Score", float)
 DocId = NewType("DocId", str)
 
@@ -33,7 +36,8 @@ class Document(BaseModel):
             page_content=self.content, metadata=metadata
         )
 
-    def from_langchain(langchain_doc: Any) -> Self:
+    # should return Self
+    def from_langchain(langchain_doc: Any) -> Any:
         """Convert a langchain document to a document."""
         # remove the _extra field from metadata
         extra = langchain_doc.metadata.pop("_extra")
@@ -85,16 +89,14 @@ class Retriever(ABC):
 class Embedder(ABC):
     @abstractmethod
     def embed_texts(self, texts: List[str]) -> List[Embedding]:
-        """Create embeddings for the texts"""
+        """Create embeddings for the texts."""
 
-    @abstractmethod
     def embed_text(self, text: str):
-        """Create an embedding for a single text"""
+        """Create an embedding for a single text."""
         return self.embed_texts([text])[0]
 
-    @abstractmethod
     def embed_docs(self, docs: List[Document]):
-        """Create embeddings for the documents"""
+        """Create embeddings for the documents."""
         texts = [doc.content for doc in docs]
         embeddings = self.embed_texts(texts)
         for doc, embedding in zip(docs, embeddings):
@@ -103,5 +105,5 @@ class Embedder(ABC):
 
 class Retriever(ABC):
     @abstractmethod
-    def retrieve_by_embedding(self, query: str, k: int) -> List[Document]:
+    def retrieve(self, query: str, k: int) -> List[Document]:
         """Retrieve the k most relevant documents to the query"""

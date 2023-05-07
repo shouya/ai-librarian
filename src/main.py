@@ -5,13 +5,15 @@ import json
 import sys
 import shutil
 
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+import openai
+
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
 
 from loader import EpubBookLoader
+from embedder import OpenAIEmbedder
+from doc_store import ChromaDocStore
+from retriever import ContextualBookRetriever
 
 
 def openai_key():
@@ -36,14 +38,24 @@ class Librarian:
     def __init__(self, book_name, book_file):
         """Initialize the librarian."""
         self.book_name = book_name
-        self.book_file = book_file
+
+        self.loader = EpubBookLoader(book_file)
+        self.book_id = self.loader.book_id()
 
         openai.api_key = openai_key()
-        self.embedding = OpenAIEmbeddings()
+        self.embedder = OpenAIEmbedder()
 
-        # store it in the xdg cache
-        self.chroma_dir = os.path.expanduser("~/.cache/librarian/chroma")
-        self._vectordb = None
+        # make doc store persist in the xdg cache
+        db_dir = os.path.expanduser(
+            f"~/.cache/librarian/book/{self.book_id}"
+        )
+        self.doc_store = ChromaDocStore.new_local(
+            f"librarian-{self.book_id}", db_dir
+        )
+
+        self.retriever = ContextualBookRetriever(
+            self.loader, self.embedder, self.doc_store
+        )
 
     def prompt(self, documents, question):
         """Generate a prompt for the librarian to answer a question."""
@@ -57,7 +69,8 @@ class Librarian:
             + "the books in following messages.\n"
         )
         docs_json = [
-            {"content": d.page_content, "ref": str(d.metadata["cite_id"])}
+            # {"content": d.content, "ref": str(d.id)}
+            {"content": d.content}
             for d in documents
         ]
         docs_msg = json.dumps(docs_json)
@@ -84,76 +97,28 @@ class Librarian:
 
         return chat_prompt
 
-    def load_documents(self):
-        """Load the documents from the book file and split to chunks."""
-        loader = EpubBookLoader(self.book_file)
-        loader.parse_book()
+    def reload_book(self):
+        """Reload the book and re-embed it."""
+        self.doc_store.load()
+
+        self.doc_store.reset()
+
+        self.loader.parse_book()
 
         docs = []
-
         # chapter-level embeddings are not very useful from my experiments
-        # docs.extend(loader.split_chapter_docs())
+        docs.extend(self.loader.split_chapter_docs())
+        docs.extend(self.loader.split_paragraph_docs())
+        # docs.extend(self.loader.split_sentence_docs())
 
-        docs.extend(loader.split_paragraph_docs())
-        docs.extend(loader.split_sentence_docs())
+        self.embedder.embed_docs(docs)
 
-        loader.store_docs(docs)
+        self.doc_store.put(docs)
+        self.doc_store.save()
 
-        return docs
-
-    def vectordb(self, force_rebuild=False):
-        """Get the vector database."""
-        if self._vectordb is not None and not force_rebuild:
-            return self._vectordb
-
-        if os.path.exists(self.chroma_dir) and not force_rebuild:
-            self._vectordb = Chroma(
-                persist_directory=self.chroma_dir,
-                embedding_function=self.embedding,
-                settings={"anonymized_telemetry": False},
-            )
-        else:
-            os.makedirs(self.chroma_dir, exist_ok=True)
-            shutil.copyfile(
-                self.book_file, os.path.join(self.chroma_dir, "book.txt")
-            )
-
-            documents = self.load_documents()
-            vectordb = Chroma.from_documents(
-                persist_directory=self.chroma_dir,
-                embedding=self.embedding,
-                documents=documents,
-            )
-            vectordb.persist()
-            self._vectordb = vectordb
-
-        return self._vectordb
-
-    def clear_collection(self):
-        """Clear the collection."""
-        if os.path.exists(self.chroma_dir):
-            import shutil
-
-            shutil.rmtree(self.chroma_dir)
-
-    def narrow_down_documents(self, q, k=10):
-        """Narrow down the documents to the most relevant."""
-        vectordb = self.vectordb()
-        retriever = vectordb.as_retriever(
-            search_type="mmr", search_kwargs={"k": k}
-        )
-        return retriever.get_relevant_documents(q)
-
-    def narrow_down_documents(self, q, k=10):
-        """Narrow down the documents to the most relevant."""
-        vectordb = self.vectordb()
-        docs = []
-        for d, score in vectordb.max_marginal_relevance_search(
-            q, k, fetch_k=k * 5
-        ):
-            d.metadata["score"] = score
-            docs.append(d)
-        return docs
+    def narrow_down_documents(self, question):
+        """Narrow down the documents to a few relevant ones."""
+        return self.retriever.retrieve(question, 10)
 
     def chat(self):
         """Get a chatbot."""
@@ -163,8 +128,7 @@ class Librarian:
         """Ask the librarian a question."""
         return {"rel_docs": [], "answer": "DUMMY", "quote": "DUMMY"}
 
-        vectordb = self.vectordb()
-        documents = self.narrow_down_documents(vectordb, question)
+        documents = self.narrow_down_documents(question)
         prompt = self.prompt(documents, question)
         resp = self.chat()(prompt).content
 
@@ -222,8 +186,8 @@ def interactive(librarian):
 
             for i, rel_doc in enumerate(last_answer["rel_docs"]):
                 print(
-                    # f"\nDocument {i}: {rel_doc.page_content.strip()[:width-20]}"
-                    f"\nDocument {i}: {rel_doc.page_content.strip()}"
+                    # f"\nDocument {i}: {rel_doc.content.strip()[:width-20]}"
+                    f"\nDocument {i}: {rel_doc.content.strip()}"
                 )
             print("-" * width)
             continue
@@ -264,7 +228,6 @@ def peek_docs(librarian):
 def debug_query(librarian):
     setup_readline()
 
-    vectordb = librarian.vectordb()
     while True:
         width = shutil.get_terminal_size().columns
         question = input("Question: ")
@@ -272,11 +235,9 @@ def debug_query(librarian):
         if question.strip() == "":
             continue
 
-        for doc in librarian.narrow_down_documents(vectordb, question):
-            cite_id = doc.metadata["cite_id"]
-            score = doc.metadata["score"]
-            print(f"[Document {cite_id}: {score:.4f}]")
-            print(doc.page_content)
+        for doc in librarian.narrow_down_documents(question):
+            print(f"[Document {doc.id}]")
+            print(doc.content)
             print()
         print("-" * width)
 
@@ -291,8 +252,7 @@ def main():
 
     if sys.argv[1] == "rebuild":
         lib = default_librarian()
-        lib.clear_collection()
-        lib.vectordb(force_rebuild=True)
+        lib.reload_book()
         print("Rebuilt collection.")
     elif sys.argv[1] == "chat":
         interactive(default_librarian())

@@ -1,7 +1,9 @@
 import chromadb
+import numpy as np
 
 from typing import List, Any
-from .base import DocStore, Document, DocId, Embedding
+
+from base import DocStore, Document, DocId, Embedding
 
 
 class ChromaDocStore(DocStore):
@@ -27,13 +29,10 @@ class ChromaDocStore(DocStore):
 
     def collection(self):
         """Get the ChromaDB collection."""
-        if hasattr(self, "_collection"):
-            return self._collection
-
-        self._collection = self.get_or_create_collection(
-            self.collection_name
+        return self.client.get_or_create_collection(
+            self.collection_name,
+            embedding_function=dummy_embedding,
         )
-        return self._collection
 
     def query_by_embedding(
         self, embedding: Embedding, k: int, **kwargs: Any
@@ -41,11 +40,15 @@ class ChromaDocStore(DocStore):
         """Query the document store by embedding."""
         coll = self.collection()
         results = coll.query(
-            query_embeddings=embedding,
-            n_results=4,
+            query_embeddings=[list(embedding)],
+            n_results=k,
             include=["metadatas", "documents", "embeddings"],
             **kwargs
         )
+        results["ids"] = results["ids"][0]
+        results["metadatas"] = results["metadatas"][0]
+        results["documents"] = results["documents"][0]
+        results["embeddings"] = results["embeddings"][0]
         return _results_to_docs(results)
 
     def put(self, docs: List[Document]) -> None:
@@ -57,11 +60,14 @@ class ChromaDocStore(DocStore):
 
         for doc in docs:
             documents.append(doc.content)
-            metadatas.append(doc.metadata)
+            metadatas.append(
+                {k: v for k, v in doc.metadata.items() if v is not None}
+            )
             ids.append(doc.id)
             embeddings.append(doc.embedding)
 
-        self.collection().add(
+        coll = self.collection()
+        coll.add(
             documents=documents,
             metadatas=metadatas,
             ids=ids,
@@ -82,6 +88,8 @@ class ChromaDocStore(DocStore):
 
     def load(self) -> None:
         """Load the document store from disk."""
+        # calling this function initializes the collection
+        _ = self.collection()
         pass
 
     def save(self) -> None:
@@ -92,7 +100,8 @@ class ChromaDocStore(DocStore):
 def _results_to_docs(results: Any) -> List[Document]:
     docs = []
 
-    for i in range(len(results)):
+    count = len(results["ids"])
+    for i in range(count):
         metadata = results["metadatas"][i]
         if metadata is None:
             metadata = {}
@@ -105,8 +114,12 @@ def _results_to_docs(results: Any) -> List[Document]:
             id=id,
             content=content,
             metadata=metadata,
-            embedding=embedding,
+            embedding=np.asarray(embedding),
         )
         docs.append(doc)
 
     return docs
+
+
+def dummy_embedding(_any):
+    raise "Should be unreachable!"
