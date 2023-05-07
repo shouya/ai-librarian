@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = [
   { name = "Shou Ya", email = "shouya@users.noreply.github.com" }
 ]
-description = "Ask question about your books"
+description = "Ask questions about your books"
 license = { file = "COPYING" }
 readme = "README.md"
 requires-python = ">=3.6"
