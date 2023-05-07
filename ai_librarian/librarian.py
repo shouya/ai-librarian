@@ -28,9 +28,15 @@ class Librarian:
         db_dir = os.path.expanduser(
             f"~/.cache/librarian/book/{self.book_id}"
         )
-        self.doc_store = ChromaDocStore.new_local(
-            f"librarian-{self.book_id}", db_dir
-        )
+        if not os.path.exists(db_dir):
+            self.doc_store = ChromaDocStore.new_local(
+                f"librarian-{self.book_id}", db_dir
+            )
+            self.reload_book()
+        else:
+            self.doc_store = ChromaDocStore.new_local(
+                f"librarian-{self.book_id}", db_dir
+            )
 
         self.retriever = ContextualBookRetriever(
             self.loader, self.embedder, self.doc_store
@@ -86,6 +92,7 @@ class Librarian:
         self.doc_store.reset()
 
         self.loader.parse_book()
+        print("Book parsed.")
 
         docs = []
         # chapter-level embeddings are not very useful from my experiments
@@ -94,9 +101,11 @@ class Librarian:
         docs.extend(self.loader.split_sentence_docs())
 
         self.embedder.embed_docs(docs)
+        print("Embedding generated.")
 
         self.doc_store.put(docs)
         self.doc_store.save()
+        print("Book index saved.")
 
     def narrow_down_documents(self, question):
         """Narrow down the documents to a few relevant ones."""
