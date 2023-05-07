@@ -1,8 +1,9 @@
 import ebooklib
 import epub_meta
 from bs4 import BeautifulSoup as BS
-from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from .base import Document
 
 import pprint
 
@@ -24,17 +25,24 @@ The structure of a parsed book:
 """
 
 
-class BookLoader:
+class BookLoader(ABC):
     """Load and parse the structure of a source book file"""
 
     def __init__(self, file_path):
         """Initialize a book loader"""
         self.file_path = file_path
-        self.structure = None
 
     def parse_book(self):
         """Parse the book file"""
         raise NotImplementedError
+
+    def split_chapter_docs(self):
+        pass
+
+    def store_docs(self, docs):
+        pass
+
+    def load(self):
 
 
 class EpubBookLoader(BookLoader):
@@ -68,43 +76,54 @@ class EpubBookLoader(BookLoader):
             chapters[i]["index"] = i
         return chapters
 
-    def to_langchain_docs(self):
-        """Convert the book to a list of langchain documents"""
+    def whole_chapter_docs(self):
+        """Convert the book to a list of documents"""
         docs = []
         for chapter in self.chapters:
             doc = Document(
-                page_content="\n\n".join(chapter["paragraphs"]),
+                id=f"whole_chapter:{chapter['index']}",
+                content="\n\n".join(chapter["paragraphs"]),
                 metadata={
                     "chapter_index": chapter["index"],
                     "chapter_title": chapter["title"],
                 },
+                embedding = None
             )
             docs.append(doc)
         return docs
 
+
     def _split_docs(self, level, splitter_conf):
         splitter = RecursiveCharacterTextSplitter(**splitter_conf)
         docs = []
-        for doc in self.to_langchain_docs():
-            split_docs = splitter.create_documents([doc.page_content])
+
+        for whole_doc in self.whole_chapter_docs():
+            chapter_index = whole_doc.metadata["chapter_index"]
+            split_docs = splitter.create_documents([doc.content])
+
             for part_no, split_doc in enumerate(split_docs):
-                split_doc.metadata = doc.metadata.copy()
+                metadata = whole_doc.metadata.copy()
+                metadata["prev_id"] = None
+                metadata["next_id"] = None
 
-                chapter_index = doc.metadata["chapter_index"]
                 part = f"{part_no+1}/{len(split_docs)}"
-                doc_id = f"{level}:{chapter_index}:{part}"
-                split_doc.metadata["doc_id"] = doc_id
+                id = f"{level}:{chapter_index}:{part}"
 
-                split_doc.metadata["prev_id"] = None
-                split_doc.metadata["next_id"] = None
+                content = split_doc.content()
 
-                docs.append(split_doc)
+                doc = Document(
+                    id=id,
+                    content=content
+                    metadata=metadata,
+                    embedding = None
+                )
+                docs.append(doc)
 
         for i in range(1, len(docs)):
-            docs[i].metadata["prev_id"] = docs[i - 1].metadata["doc_id"]
+            docs[i].metadata["prev_id"] = docs[i - 1].id
 
         for i in range(0, len(docs) - 1):
-            docs[i].metadata["next_id"] = docs[i + 1].metadata["doc_id"]
+            docs[i].metadata["next_id"] = docs[i + 1].id
 
         return docs
 
@@ -122,11 +141,6 @@ class EpubBookLoader(BookLoader):
         return self._split_docs(
             "sentence", {"chunk_size": 200, "chunk_overlap": 0}
         )
-
-    def store_docs(self, docs):
-        for doc in docs:
-            doc_id = doc.metadata["doc_id"]
-            self.doc_index[doc_id] = doc
 
 
 if __name__ == "__main__":

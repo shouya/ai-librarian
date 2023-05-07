@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, NewType, Tuple, Any
+from typing import Optional, List, NewType, Any, Self
 from pydantic import BaseModel
 import numpy as np
 
@@ -9,14 +9,41 @@ DocId = NewType("DocId", str)
 
 
 class Document(BaseModel):
-    """A document that can be stored in a document store"""
+    """A document that can be stored in a document store."""
 
+    # Must be unique in a "Book"/"DocStore"
     id: DocId
+
     content: str
     metadata: dict
 
     # optional, only available if the document is retrieved
     embedding: Optional[Embedding] = None
+
+    def to_langchain(self) -> Any:
+        """Convert the document to a langchain document."""
+        import langchain
+
+        metadata = {
+            "_extra": {"id": self.id, "embedding": self.embedding},
+            **self.metadata,
+        }
+
+        return langchain.schema.Document(
+            page_content=self.content, metadata=metadata
+        )
+
+    def from_langchain(langchain_doc: Any) -> Self:
+        """Convert a langchain document to a document."""
+        # remove the _extra field from metadata
+        extra = langchain_doc.metadata.pop("_extra")
+
+        return Document(
+            id=extra["id"],
+            content=langchain_doc.page_content,
+            metadata=langchain_doc.metadata,
+            embedding=extra["embedding"],
+        )
 
 
 class DocStore(ABC):
@@ -24,7 +51,7 @@ class DocStore(ABC):
     def query_by_embedding(
         self, embedding: Embedding, k: int, **kwargs: Any
     ) -> List[Document]:
-        """Search for the k most similar documents"""
+        """Search for the k most similar documents."""
 
     @abstractmethod
     def put(self, docs: List[Document]) -> None:

@@ -43,7 +43,7 @@ class ChromaDocStore(DocStore):
         results = coll.query(
             query_embeddings=embedding,
             n_results=4,
-            include=["metadatas", "documents", "distances", "embeddings"],
+            include=["metadatas", "documents", "embeddings"],
             **kwargs
         )
         return _results_to_docs(results)
@@ -56,7 +56,7 @@ class ChromaDocStore(DocStore):
         embeddings = []
 
         for doc in docs:
-            documents.append(doc.page_content)
+            documents.append(doc.content)
             metadatas.append(doc.metadata)
             ids.append(doc.id)
             embeddings.append(doc.embedding)
@@ -97,12 +97,16 @@ def _results_to_docs(results: Any) -> List[Document]:
         if metadata is None:
             metadata = {}
 
-        metadata["distance"] = results["distances"][2]
-        metadata["embedding"] = results["embeddings"][3]
+        embedding = results["embeddings"][i]
+        content = results["documents"][i]
+        id = results["ids"][i]
 
-        page_content = results["documents"][1]
-
-        doc = Document(page_content=page_content, metadata=metadata)
+        doc = Document(
+            id=id,
+            content=content,
+            metadata=metadata,
+            embedding=embedding,
+        )
         docs.append(doc)
 
     return docs
