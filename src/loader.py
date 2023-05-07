@@ -1,6 +1,5 @@
 import ebooklib
 import epub_meta
-from ebooklib import epub
 from bs4 import BeautifulSoup as BS
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -41,11 +40,11 @@ class BookLoader:
 class EpubBookLoader(BookLoader):
     epub = None
     chapters = None
-    cite_index = {}
+    doc_index = {}
 
     def parse_book(self):
         """Parse the book file"""
-        self.epub = epub.read_epub(self.file_path)
+        self.epub = ebooklib.epub.read_epub(self.file_path)
         self.chapters = self._parse_chapters(self.epub)
 
     def _parse_chapters(self, epub):
@@ -93,8 +92,8 @@ class EpubBookLoader(BookLoader):
 
                 chapter_index = doc.metadata["chapter_index"]
                 part = f"{part_no+1}/{len(split_docs)}"
-                cite_id = f"{level}:{chapter_index}:{part}"
-                split_doc.metadata["cite_id"] = cite_id
+                doc_id = f"{level}:{chapter_index}:{part}"
+                split_doc.metadata["doc_id"] = doc_id
 
                 split_doc.metadata["prev_id"] = None
                 split_doc.metadata["next_id"] = None
@@ -102,10 +101,10 @@ class EpubBookLoader(BookLoader):
                 docs.append(split_doc)
 
         for i in range(1, len(docs)):
-            docs[i].metadata["prev_id"] = docs[i - 1].metadata["cite_id"]
+            docs[i].metadata["prev_id"] = docs[i - 1].metadata["doc_id"]
 
         for i in range(0, len(docs) - 1):
-            docs[i].metadata["next_id"] = docs[i + 1].metadata["cite_id"]
+            docs[i].metadata["next_id"] = docs[i + 1].metadata["doc_id"]
 
         return docs
 
@@ -126,8 +125,8 @@ class EpubBookLoader(BookLoader):
 
     def store_docs(self, docs):
         for doc in docs:
-            doc_id = doc.metadata["cite_id"]
-            self.cite_index[doc_id] = doc
+            doc_id = doc.metadata["doc_id"]
+            self.doc_index[doc_id] = doc
 
 
 if __name__ == "__main__":
