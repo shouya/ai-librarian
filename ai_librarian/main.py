@@ -3,7 +3,7 @@ import sys
 from .librarian import Librarian, interactive
 
 
-def main():
+def cli():
     """Main entry point for the application script"""
 
     if len(sys.argv) == 1:
@@ -13,7 +13,3 @@ def main():
     epub_file = sys.argv[1]
     librarian = Librarian("Book name", epub_file)
     interactive(librarian)
-
-
-if __name__ == "__main__":
-    main()
