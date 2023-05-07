@@ -27,7 +27,9 @@ $ pip install git+https://github.com/shouya/ai-librarian.git
 
 ## Usage
 
-``` bash
+See the demo below (Everything after `Question: ` are user inputs):
+
+```
 $ export OPENAI_API_KEY=sk-...
 $ ai-librarian <path/to/book.epub>
 Question: Where do I live?
