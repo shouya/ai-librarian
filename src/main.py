@@ -7,10 +7,11 @@ import shutil
 
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import TextLoader, UnstructuredEPubLoader
 from langchain.vectorstores import Chroma
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
+
+from loader import EpubBookLoader
 
 
 def openai_key():
@@ -37,7 +38,7 @@ class Librarian:
         self.book_name = book_name
         self.book_file = book_file
 
-        os.environ["OPENAI_API_KEY"] = openai_key()
+        openai.api_key = openai_key()
         self.embedding = OpenAIEmbeddings()
 
         # store it in the xdg cache
@@ -83,32 +84,22 @@ class Librarian:
 
         return chat_prompt
 
-    def load_raw_documents(self):
-        """Load the raw documents from the book file."""
-        if self.book_file.endswith(".txt"):
-            loader = TextLoader(self.book_file)
-        elif self.book_file.endswith(".epub"):
-            loader = UnstructuredEPubLoader(
-                self.book_file, mode="elements"
-            )
-        else:
-            raise ValueError(
-                f"Unsupported file type: {self.book_file}. "
-                + "Only .txt and .epub are supported."
-            )
-
-        return loader.load()
-
     def load_documents(self):
         """Load the documents from the book file and split to chunks."""
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=200, chunk_overlap=0
-        )
-        documents = splitter.split_documents(self.load_raw_documents())
-        for id, doc in enumerate(documents):
-            doc.metadata["cite_id"] = id
-            doc.metadata["book"] = self.book_name
-        return documents
+        loader = EpubBookLoader(self.book_file)
+        loader.parse_book()
+
+        docs = []
+
+        # chapter-level embeddings are not very useful from my experiments
+        # docs.extend(loader.split_chapter_docs())
+
+        docs.extend(loader.split_paragraph_docs())
+        docs.extend(loader.split_sentence_docs())
+
+        loader.store_docs(docs)
+
+        return docs
 
     def vectordb(self, force_rebuild=False):
         """Get the vector database."""
@@ -119,6 +110,7 @@ class Librarian:
             self._vectordb = Chroma(
                 persist_directory=self.chroma_dir,
                 embedding_function=self.embedding,
+                settings={"anonymized_telemetry": False},
             )
         else:
             os.makedirs(self.chroma_dir, exist_ok=True)
@@ -144,12 +136,24 @@ class Librarian:
 
             shutil.rmtree(self.chroma_dir)
 
-    def narrow_down_documents(self, vectordb, question, k=10):
+    def narrow_down_documents(self, q, k=10):
         """Narrow down the documents to the most relevant."""
+        vectordb = self.vectordb()
         retriever = vectordb.as_retriever(
             search_type="mmr", search_kwargs={"k": k}
         )
-        return retriever.get_relevant_documents(question)
+        return retriever.get_relevant_documents(q)
+
+    def narrow_down_documents(self, q, k=10):
+        """Narrow down the documents to the most relevant."""
+        vectordb = self.vectordb()
+        docs = []
+        for d, score in vectordb.max_marginal_relevance_search(
+            q, k, fetch_k=k * 5
+        ):
+            d.metadata["score"] = score
+            docs.append(d)
+        return docs
 
     def chat(self):
         """Get a chatbot."""
@@ -157,6 +161,8 @@ class Librarian:
 
     def ask_question(self, question):
         """Ask the librarian a question."""
+        return {"rel_docs": [], "answer": "DUMMY", "quote": "DUMMY"}
+
         vectordb = self.vectordb()
         documents = self.narrow_down_documents(vectordb, question)
         prompt = self.prompt(documents, question)
@@ -179,8 +185,7 @@ class Librarian:
         }
 
 
-def interactive(librarian):
-    """Ask questions interactively."""
+def setup_readline():
     import readline
 
     # use readline to get input, save history in ~/.cache/librarian/history
@@ -193,7 +198,11 @@ def interactive(librarian):
         pass
     atexit.register(readline.write_history_file, histfile)
 
-    last_answer = None
+
+def interactive(librarian):
+    """Ask questions interactively."""
+    setup_readline()
+    last_answer = {}
 
     while True:
         width = shutil.get_terminal_size().columns
@@ -239,7 +248,7 @@ def interactive(librarian):
 def default_librarian():
     """Get a librarian."""
     return Librarian(
-        "A Sport and a Pastime", "/home/shou/tmp/book/book.txt"
+        "A Sport and a Pastime", "/home/shou/tmp/book/book.epub"
     )
 
 
@@ -247,15 +256,37 @@ def peek_docs(librarian):
     """Peek at the documents."""
     import pprint
 
-    docs = librarian.load_raw_documents()[0:1000]
+    docs = librarian.load_documents()[0:1000]
     for doc in docs:
         pprint.pprint(doc)
+
+
+def debug_query(librarian):
+    setup_readline()
+
+    vectordb = librarian.vectordb()
+    while True:
+        width = shutil.get_terminal_size().columns
+        question = input("Question: ")
+
+        if question.strip() == "":
+            continue
+
+        for doc in librarian.narrow_down_documents(vectordb, question):
+            cite_id = doc.metadata["cite_id"]
+            score = doc.metadata["score"]
+            print(f"[Document {cite_id}: {score:.4f}]")
+            print(doc.page_content)
+            print()
+        print("-" * width)
 
 
 def main():
     """Entry point."""
     if len(sys.argv) != 2:
-        print("Usage: python3 librarian.py [rebuild|chat|peek_docs]")
+        print(
+            "Usage: python3 librarian.py [rebuild|chat|peek_docs|debug_query]"
+        )
         return
 
     if sys.argv[1] == "rebuild":
@@ -267,6 +298,8 @@ def main():
         interactive(default_librarian())
     elif sys.argv[1] == "peek_docs":
         peek_docs(default_librarian())
+    elif sys.argv[1] == "debug_query":
+        debug_query(default_librarian())
 
 
 if __name__ == "__main__":
