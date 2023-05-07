@@ -5,23 +5,6 @@ import json
 import sys
 import shutil
 
-
-def openai_key():
-    """Get the OpenAI API key."""
-    if os.environ.get("OPENAI_API_KEY"):
-        return os.environ.get("OPENAI_API_KEY")
-    # try retrieve from a cached global variable to avoid calling subprocess
-    # if not found, call subprocess and cache it
-
-    if not hasattr(openai_key, "key"):
-        openai_key.key = (
-            subprocess.check_output("pass show openai/api-key", shell=True)
-            .decode("utf-8")
-            .strip()
-        )
-    return openai_key.key
-os.environ["OPENAI_API_KEY"] = openai_key()
-
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
 
@@ -29,8 +12,6 @@ from loader import EpubBookLoader
 from embedder import OpenAIEmbedder
 from doc_store import ChromaDocStore
 from retriever import ContextualBookRetriever
-
-
 
 class Librarian:
     """A librarian that answers questions about a book."""
