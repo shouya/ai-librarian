@@ -5,3 +5,4 @@ unstructured
 epub_meta
 ebooklib
 beautifulsoup4
+chroma
