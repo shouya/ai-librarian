@@ -41,6 +41,7 @@ class BookLoader:
 class EpubBookLoader(BookLoader):
     epub = None
     chapters = None
+    cite_index = {}
 
     def parse_book(self):
         """Parse the book file"""
@@ -82,41 +83,51 @@ class EpubBookLoader(BookLoader):
             docs.append(doc)
         return docs
 
-    def split_chapter_docs(self):
-        """Split the book into chapter-sized documents"""
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=2000,
-            chunk_overlap=100,
-        )
-        docs = []
-        for doc in self.to_langchain_docs():
-            split_docs = splitter.create_documents([doc.page_content])
-            for part_no, split_doc in enumerate(split_docs):
-                split_doc.metadata = doc.metadata
-                part = f"{part_no+1}/{len(split_docs)}"
-                split_doc.metadata["part_of_chapter"] = part
-                split_doc.metadata["level"] = "chapter"
-                docs.append(split_doc)
-
-        return docs
-
-    def split_sentence_docs(self):
-        """Split the book into sentence-sized documents"""
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=200,
-            chunk_overlap=0,
-        )
+    def _split_docs(self, level, splitter_conf):
+        splitter = RecursiveCharacterTextSplitter(**splitter_conf)
         docs = []
         for doc in self.to_langchain_docs():
             split_docs = splitter.create_documents([doc.page_content])
             for part_no, split_doc in enumerate(split_docs):
                 split_doc.metadata = doc.metadata.copy()
+
+                chapter_index = doc.metadata["chapter_index"]
                 part = f"{part_no+1}/{len(split_docs)}"
-                split_doc.metadata["part_of_chapter"] = part
-                split_doc.metadata["level"] = "sentence"
+                cite_id = f"{level}:{chapter_index}:{part}"
+                split_doc.metadata["cite_id"] = cite_id
+
+                split_doc.metadata["prev_id"] = None
+                split_doc.metadata["next_id"] = None
+
                 docs.append(split_doc)
 
+        for i in range(1, len(docs)):
+            docs[i].metadata["prev_id"] = docs[i - 1].metadata["cite_id"]
+
+        for i in range(0, len(docs) - 1):
+            docs[i].metadata["next_id"] = docs[i + 1].metadata["cite_id"]
+
         return docs
+
+    def split_chapter_docs(self):
+        return self._split_docs(
+            "chapter", {"chunk_size": 2000, "chunk_overlap": 100}
+        )
+
+    def split_paragraph_docs(self):
+        return self._split_docs(
+            "paragraph", {"chunk_size": 800, "chunk_overlap": 0}
+        )
+
+    def split_sentence_docs(self):
+        return self._split_docs(
+            "sentence", {"chunk_size": 200, "chunk_overlap": 0}
+        )
+
+    def store_docs(self, docs):
+        for doc in docs:
+            doc_id = doc.metadata["cite_id"]
+            self.cite_index[doc_id] = doc
 
 
 if __name__ == "__main__":
