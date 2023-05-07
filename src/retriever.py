@@ -32,17 +32,15 @@ class ContextualBookRetriever(Retriever):
         ]
 
         # reorder based on the length, similarity, etc.
-        relevant_docs = self.reorder_docs(query_embedding, relevant_docs)[
-            :k
-        ]
+        relevant_docs = self.reorder_docs(query_embedding, relevant_docs)
 
-        return relevant_docs
+        return relevant_docs[:k]
 
     def reorder_docs(self, query_embedding, docs):
         """Reorder the docs based on the length, similarity, etc."""
 
         def dist(doc):
-            return -cosine_dist(query_embedding, doc.embedding)
+            return cosine_dist(query_embedding, doc.embedding)
 
         return sorted(docs, key=dist)
 
@@ -78,8 +76,8 @@ def concat_doc(a: Document, b: Document) -> Document:
     """Concatenate two documents."""
     content = a.content + b.content
     metadata = a.metadata.copy()
-    metadata["prev_id"] = a.metadata["prev_id"]
-    metadata["next_id"] = b.metadata["next_id"]
+    metadata["prev_id"] = a.metadata.get("prev_id")
+    metadata["next_id"] = b.metadata.get("next_id")
 
     [level, chap_a, part_a] = a.id.split(":")
     [_level, chap_b, part_b] = b.id.split(":")
@@ -109,7 +107,7 @@ def concat_doc(a: Document, b: Document) -> Document:
 
 def cosine_dist(a: Embedding, b: Embedding):
     """Compute cosine distance between two vectors."""
-    return np.dot(a, b)
+    return 1 - np.dot(a, b)
 
 
 def _mmr(self, query_embedding, docs, k):
