@@ -3,10 +3,10 @@ import numpy as np
 
 from typing import List, Any
 
-from .base import DocStore, Document, DocId, Embedding
+from .base import VectorDocStore, Document, DocId, Embedding
 
 
-class ChromaDocStore(DocStore):
+class ChromaDocStore(VectorDocStore):
     """A document store backed by ChromaDB."""
 
     client: chromadb.Client
@@ -43,7 +43,7 @@ class ChromaDocStore(DocStore):
             query_embeddings=[list(embedding)],
             n_results=k,
             include=["metadatas", "documents", "embeddings"],
-            **kwargs
+            **kwargs,
         )
         results["ids"] = results["ids"][0]
         results["metadatas"] = results["metadatas"][0]

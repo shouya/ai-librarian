@@ -52,12 +52,6 @@ class Document(BaseModel):
 
 class DocStore(ABC):
     @abstractmethod
-    def query_by_embedding(
-        self, embedding: Embedding, k: int, **kwargs: Any
-    ) -> List[Document]:
-        """Search for the k most similar documents."""
-
-    @abstractmethod
     def put(self, docs: List[Document]) -> None:
         """Save documents to the store."""
 
@@ -78,12 +72,12 @@ class DocStore(ABC):
         """Save the document store to disk."""
 
 
-class Retriever(ABC):
+class VectorDocStore(DocStore):
     @abstractmethod
-    def retrieve(
-        self, query: str, k: int, **kwargs: Any
+    def query_by_embedding(
+        self, embedding: Embedding, k: int, **kwargs: Any
     ) -> List[Document]:
-        """Retrieve the k most relevant documents to the query"""
+        """Search for the k most similar documents."""
 
 
 class Embedder(ABC):
