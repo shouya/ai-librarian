@@ -88,17 +88,14 @@ class Librarian:
     def reload_book(self):
         """Reload the book and re-embed it."""
         self.doc_store.load()
-
         self.doc_store.reset()
+        print("Book index reset.")
 
-        self.loader.parse_book()
-        print("Book parsed.")
+        self.loader.load()
+        print("Book loaded.")
 
-        docs = []
-        # chapter-level embeddings are not very useful from my experiments
-        # docs.extend(self.loader.split_chapter_docs())
-        docs.extend(self.loader.split_paragraph_docs())
-        docs.extend(self.loader.split_sentence_docs())
+        docs = self.loader.to_docs()
+        print("Book fragments generated.")
 
         self.embedder.embed_docs(docs)
         print("Embedding generated.")

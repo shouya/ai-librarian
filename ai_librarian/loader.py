@@ -4,12 +4,12 @@ import epub_meta
 from bs4 import BeautifulSoup as BS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from .base import Document
+from .base import Document, Loader
 
 import pprint
 
 
-class EpubBookLoader:
+class EpubBookLoader(Loader):
     epub = None
     chapters = None
     doc_index = {}
@@ -18,7 +18,7 @@ class EpubBookLoader:
         """Initialize a book loader"""
         self.file_path = file_path
 
-    def parse_book(self):
+    def load(self):
         """Parse the book file"""
         load_opts = {"ignore_ncx": True}
         self.epub = ebooklib.epub.read_epub(self.file_path, load_opts)
@@ -36,6 +36,12 @@ class EpubBookLoader:
                     break
                 sha1.update(data)
         return sha1.hexdigest()[:32]
+
+    def to_docs(self):
+        docs = []
+        docs.extend(self.split_paragraph_docs())
+        docs.extend(self.split_sentence_docs())
+        return docs
 
     def _parse_chapters(self, epub):
         """Parse the chapters of the book"""

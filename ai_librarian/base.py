@@ -101,3 +101,17 @@ class Retriever(ABC):
     @abstractmethod
     def retrieve(self, query: str, k: int) -> List[Document]:
         """Retrieve the k most relevant documents to the query"""
+
+
+class Loader(ABC):
+    @abstractmethod
+    def load(self) -> None:
+        """Load a book from disk."""
+
+    @abstractmethod
+    def book_id(self) -> str:
+        """Return a globally unique book id."""
+
+    @abstractmethod
+    def to_docs(self) -> List[Document]:
+        """Split the book into documents."""
