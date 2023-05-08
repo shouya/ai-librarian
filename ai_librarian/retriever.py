@@ -56,11 +56,11 @@ class ContextualBookRetriever(Retriever):
     def extend_context_step(self, query_embedding, doc):
         """Extend the context of a document by one step."""
         docs = [doc]
-        if doc.metadata["prev_id"]:
+        if doc.metadata.get("prev_id"):
             prev_doc = self.doc_store.get([doc.metadata["prev_id"]])[0]
             # prev_doc.embedding *= 0.7
             docs.append(concat_doc(prev_doc, doc))
-        if doc.metadata["next_id"]:
+        if doc.metadata.get("next_id"):
             next_doc = self.doc_store.get([doc.metadata["next_id"]])[0]
             # next_doc.embedding *= 0.7
             docs.append(concat_doc(doc, next_doc))
