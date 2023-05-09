@@ -60,6 +60,10 @@ class DocStore(ABC):
         """Load documents from the store."""
 
     @abstractmethod
+    def dump(self) -> List[Document]
+        """Dump all documents from the store."""
+
+    @abstractmethod
     def reset(self) -> None:
         """Delete all documents from the store."""
 

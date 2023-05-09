@@ -82,6 +82,14 @@ class ChromaDocStore(VectorDocStore):
         )
         return _results_to_docs(results)
 
+    def dump(self) -> List[Document]:
+        """Dump all documents from the store."""
+        coll = self.collection()
+        results = coll.get(
+            include=["metadatas", "documents", "embeddings"]
+        )
+        return _results_to_docs(results)
+
     def reset(self) -> None:
         """Reset the document store."""
         self.client.delete_collection(self.collection_name)
