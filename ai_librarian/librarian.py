@@ -218,7 +218,8 @@ def interactive_debug_query(librarian):
             continue
 
         for doc in librarian.narrow_down_documents(question):
-            print(f"[Document {doc.id}]")
+            chapter = doc.metadata["chapter_title"]
+            print(f"[Document {doc.id} (chapter {chapter})]")
             print(doc.content)
             print()
         print("-" * width)
