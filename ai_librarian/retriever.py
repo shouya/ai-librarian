@@ -82,6 +82,11 @@ def contains(a: Document, b: Document) -> bool:
 
     if a_merged_ids >= b_merged_ids:
         return True
+
+    # it can happen when sentence/paragraph contains the same text
+    if b.content.replace(" ", "") in a.content.replace(" ", ""):
+        return True
+
     return False
 
 
