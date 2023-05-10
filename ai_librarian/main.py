@@ -2,7 +2,7 @@ import click
 
 import sys
 
-from .librarian import Librarian, interactive, debug_query
+from .librarian import Librarian, interactive, interactive_debug_query
 
 
 @click.group()
@@ -21,7 +21,7 @@ def chat(file):
 @click.option("-f", "--file", required=True, help="Path to the epub file")
 def debug_query(file):
     librarian = Librarian(file)
-    debug_query(librarian)
+    interactive_debug_query(librarian)
 
 
 @cli.command(help="Rebuild the index")

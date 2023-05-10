@@ -198,7 +198,7 @@ def interactive(librarian):
         last_answer = resp
 
 
-def debug_query(librarian):
+def interactive_debug_query(librarian):
     setup_readline()
 
     while True:
