@@ -25,17 +25,26 @@ class Librarian:
         self.embedder = OpenAIEmbedder()
 
         # make doc store persist in the xdg cache
-        db_dir = os.path.expanduser(
+        self.book_dir = os.path.expanduser(
             f"~/.cache/librarian/book/{self.book_id}"
         )
-        if not os.path.exists(db_dir):
+
+        # copy the book to book_dir
+        if not os.path.exists(self.book_dir):
+            os.makedirs(self.book_dir)
+            shutil.copy(book_file, self.book_dir)
+
+        store_dir = os.path.join(self.book_dir, "store")
+        if not os.path.exists(store_dir):
+            # calling ChromaDocStore.new_local will create the
+            # store_dir, thus we must check if it exists first
             self.doc_store = ChromaDocStore.new_local(
-                f"librarian-{self.book_id}", db_dir
+                f"librarian-{self.book_id}", store_dir
             )
             self.reload_book()
         else:
             self.doc_store = ChromaDocStore.new_local(
-                f"librarian-{self.book_id}", db_dir
+                f"librarian-{self.book_id}", store_dir
             )
 
         self.retriever = ContextualBookRetriever(
