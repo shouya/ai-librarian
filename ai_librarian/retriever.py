@@ -10,9 +10,8 @@ from .base import Retriever, Embedding, Document, DocId
 class ContextualBookRetriever(Retriever):
     """Retrieve the most relevant context for docs."""
 
-    def __init__(self, loader, embedder, doc_store):
+    def __init__(self, embedder, doc_store):
         """Initialize the retriever."""
-        self.loader = loader
         self.doc_store = doc_store
         self.embedder = embedder
 

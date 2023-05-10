@@ -17,10 +17,23 @@ from .retriever import ContextualBookRetriever
 class Librarian:
     """A librarian that answers questions about a book."""
 
-    def __init__(self, book_file):
+    @staticmethod
+    def from_file(book_file):
+        """Create a librarian from a book file."""
+        loader = EpubBookLoader(book_file)
+        book_id = loader.book_id()
+
+        book_dir = os.path.expanduser(f"~/.cache/librarian/book/{book_id}")
+        if not os.path.exists(book_dir):
+            os.makedirs(book_dir)
+            shutil.copy(book_file, book_dir)
+
+        return Librarian(book_id)
+
+    def __init__(self, book_id, loader=None):
         """Initialize the librarian."""
-        self.loader = EpubBookLoader(book_file)
-        self.book_id = self.loader.book_id()
+        self.book_id = book_id
+        self.loader = loader
 
         self.embedder = OpenAIEmbedder()
 
@@ -28,11 +41,6 @@ class Librarian:
         self.book_dir = os.path.expanduser(
             f"~/.cache/librarian/book/{self.book_id}"
         )
-
-        # copy the book to book_dir
-        if not os.path.exists(self.book_dir):
-            os.makedirs(self.book_dir)
-            shutil.copy(book_file, self.book_dir)
 
         store_dir = os.path.join(self.book_dir, "store")
         if not os.path.exists(store_dir):
@@ -48,7 +56,7 @@ class Librarian:
             )
 
         self.retriever = ContextualBookRetriever(
-            self.loader, self.embedder, self.doc_store
+            self.embedder, self.doc_store
         )
 
     def prompt(self, documents, question):
@@ -96,6 +104,9 @@ class Librarian:
 
     def reload_book(self):
         """Reload the book and re-embed it."""
+        if self.loader is None:
+            raise ValueError("Book is read-only.")
+
         self.doc_store.load()
         self.doc_store.reset()
         print("Book index reset.")
