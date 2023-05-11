@@ -1,0 +1,113 @@
+* {
+    box-sizing: border-box;
+    transition: 0.5s;
+}
+
+#root {}
+
+.container {
+    display: flex;
+    height: 90vh;
+}
+
+.book-list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    max-width: 300px;
+    border: 1px solid green;
+    padding: 10px;
+}
+
+.book-list-item {
+    margin: 3px;
+    cursor: pointer;
+    line-height: 4em;
+    text-align: center;
+}
+
+.book-list-item.current {
+    background-color: #eee;
+}
+
+.chat-window {
+    flex-direction: column;
+    display: flex;
+    flex: 5;
+}
+
+.chat-history-backlog {
+    flex: 1;
+    border: 1px solid green;
+    overflow: scroll;
+}
+
+.chat-history-entry {
+    border: 1px dashed green;
+    margin: 10px;
+    display: flex;
+    padding: 5px;
+    flex-direction: column;
+}
+.chat-history-entry .question {
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+.chat-history-entry .references {
+    font-size: 0.9em;
+    height: 0;
+    overflow: hidden;
+}
+
+.chat-history-entry .references.expanded {
+    font-size: 0.9em;
+    height: auto;
+}
+
+.reference {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    margin-left: 20px;
+    font-size: 0.9em;
+}
+.reference .metadata {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: row;
+}
+.reference .metadata .chapter::before {
+    content: "— ";
+}
+.reference .metadata .chapter {
+    font-style: italic;
+    flex: 1;
+}
+.reference .metadata .ref-id {
+    color: gray;
+    margin-right: 20px;
+}
+
+
+.chat-history-entry .quote::before {
+    content: "“";
+}
+
+.chat-history-entry .quote::after {
+    content: "”";
+}
+
+.ask-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid green;
+}
+
+.ask-bar > input {
+    flex: 1;
+    margin-right: 10px;
+}
