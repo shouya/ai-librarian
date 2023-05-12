@@ -2,8 +2,7 @@ from typing import List, Tuple
 import sqlite3
 import json
 
-from .librarian import Librarian
-from . import LIBRARIAN_DIR
+from .const import LIBRARIAN_DIR
 
 
 class Library:
@@ -120,6 +119,8 @@ class Library:
 
     def register_book(self, book_name, path_to_book):
         """Register a new book to the library."""
+        from .librarian import Librarian
+
         librarian = Librarian.from_file(path_to_book)
         librarian.reload_book()
         self.add_book(book_name, librarian.book_id)
@@ -138,6 +139,8 @@ class Library:
 
     def get_librarian(self, book_id):
         """Get a librarian for a book."""
+        from .librarian import Librarian
+
         if self.book_exists(book_id):
             return Librarian(book_id)
 

@@ -6,12 +6,17 @@ from .library import Library
 app = Flask(__name__, static_folder="../web/dist/")
 
 
-@app.route("/books", methods=["GET"])
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+
+@app.route("/api/books", methods=["GET"])
 def list_books():
     return Library.instance().list_books()
 
 
-@app.route("/books/<book_id>/ask", methods=["POST"])
+@app.route("/api/books/<book_id>/ask", methods=["POST"])
 def ask(book_id):
     question = request.args.get("q")
     if not question:
@@ -21,12 +26,17 @@ def ask(book_id):
     return librarian.ask_question_logged(question)
 
 
-@app.route("/books/<book_id>/history", methods=["GET"])
+@app.route("/api/books/<book_id>/history", methods=["GET"])
 def history(book_id):
     return Library.instance().list_chat_logs(book_id)
 
 
-@app.route("/books/<book_id>/history/<log_id>", methods=["DELETE"])
+@app.route("/api/books/<book_id>/history/<log_id>", methods=["DELETE"])
 def remove_history(book_id, log_id):
     Library.instance().remove_chat_log(book_id, log_id)
     return "OK"
+
+
+@app.route("/<path:static_file>")
+def serve_static_file(static_file):
+    return app.send_static_file(static_file)

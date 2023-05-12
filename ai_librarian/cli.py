@@ -30,3 +30,12 @@ def rebuild(file):
     librarian = Librarian.from_file(file)
     librarian.reload_book()
     print("Rebuilt index.")
+
+
+@cli.command(help="Start web interface")
+@click.option("-h", "--host", default="127.0.0.1")
+@click.option("-p", "--port", default=5000)
+def web(host, port):
+    from .web import app
+
+    app.run(host=host, port=port)
