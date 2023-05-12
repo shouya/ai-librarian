@@ -23,6 +23,7 @@
     margin: 3px;
     cursor: pointer;
     line-height: 4em;
+    font-size: 1.2em;
     text-align: center;
 }
 
@@ -53,13 +54,12 @@
     flex-direction: column;
 }
 .chat-history-entry .question {
-    font-size: 0.9em;
+    font-size: 1.3em;
     font-style: italic;
     line-height: 1.5;
 }
 
 .chat-history-entry .answer {
-    cursor: pointer;
     border-bottom: 1px dashed #fff;
     padding-bottom: 10px;
     margin-bottom: 10px;
@@ -67,7 +67,15 @@
 .chat-history-entry .quote {
     cursor: pointer;
     color: #333;
+    font-size: 0.8em;
 }
+.chat-history-entry .quote::before {
+    content: "“";
+}
+.chat-history-entry .quote::after {
+    content: "”";
+}
+
 .chat-history-entry .references {
     overflow: hidden;
     max-height: 0;
@@ -83,7 +91,7 @@
     flex-direction: column;
     margin: 10px;
     margin-left: 20px;
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 .reference .metadata {
     margin-left: 10px;
@@ -102,14 +110,6 @@
     margin-right: 20px;
 }
 
-
-.chat-history-entry .quote::before {
-    content: "“";
-}
-
-.chat-history-entry .quote::after {
-    content: "”";
-}
 
 .ask-bar {
     display: flex;

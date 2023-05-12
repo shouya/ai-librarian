@@ -14,7 +14,6 @@ function chatHistoryReducer(chatHistory, action) {
         };
         return { ...chatHistory, [bookId]: [historyEntry, ...history] }
     } else if (action.type == "init") {
-        console.log({ ...chatHistory, [bookId]: action.history })
         return { ...chatHistory, [bookId]: action.history }
     } else {
         throw new Error("Invalid action type");
@@ -76,6 +75,7 @@ function ChatHistoryBacklog({ chatHistory }) {
 }
 
 function askQuestion(bookId, question, dispatch) {
+    if (question == "") return;
     ask(bookId, question, resp => {
         const { log_id, answer, quote, rel_docs } = resp;
         dispatch({
