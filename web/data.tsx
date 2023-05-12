@@ -68,6 +68,7 @@ export const requestToGetAnswer = ({ question, bookId }, callback) => {
 
 export const initHistory = {
   "5aaab36d14b7f88f326d5fab9": [{
+    "id": "1",
     "question": "asdfasdf",
     "answer": "Dean is a character mentioned in the book, but there is not enough information to determine who he is exactly.",
     "quote": "not telling the truth about Dean, I am inventing him. I am creating him out of my own inadequacies, you must always remember that.",
@@ -119,6 +120,7 @@ export const initHistory = {
     ]
   },
   {
+    "id": "2",
     "question": "asdfasdfasdgasdg",
     "answer": "Dean is a character mentioned in the book, but there is not enough information to determine who he is exactly.",
     "quote": "not telling the truth about Dean, I am inventing him. I am creating him out of my own inadequacies, you must always remember that.",
@@ -170,6 +172,7 @@ export const initHistory = {
     ]
   },
   {
+    "id": "3",
     "question": "asdfasdg",
     "answer": "Dean is a character mentioned in the book, but there is not enough information to determine who he is exactly.",
     "quote": "not telling the truth about Dean, I am inventing him. I am creating him out of my own inadequacies, you must always remember that.",
@@ -220,5 +223,4 @@ export const initHistory = {
       }
     ]
   }]
-
 };

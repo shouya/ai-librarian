@@ -1,6 +1,6 @@
 * {
     box-sizing: border-box;
-    transition: 0.5s;
+    transition: 0.3s;
 }
 
 #root {}
@@ -37,32 +37,45 @@
 }
 
 .chat-history-backlog {
+    display: flex;
     flex: 1;
     border: 1px solid green;
     overflow: scroll;
+    flex-direction: column-reverse;
 }
 
 .chat-history-entry {
-    border: 1px dashed green;
+    background-color: #ccc;
+    border-radius: 10px;
     margin: 10px;
     display: flex;
-    padding: 5px;
+    padding: 15px;
     flex-direction: column;
 }
 .chat-history-entry .question {
     font-size: 0.9em;
     font-style: italic;
+    line-height: 1.5;
 }
 
+.chat-history-entry .answer {
+    cursor: pointer;
+    border-bottom: 1px dashed #fff;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+.chat-history-entry .quote {
+    cursor: pointer;
+    color: #333;
+}
 .chat-history-entry .references {
-    font-size: 0.9em;
-    height: 0;
     overflow: hidden;
+    max-height: 0;
+    color: #333;
 }
 
 .chat-history-entry .references.expanded {
-    font-size: 0.9em;
-    height: auto;
+    max-height: 1000px;
 }
 
 .reference {

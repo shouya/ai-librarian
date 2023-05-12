@@ -8,8 +8,9 @@ function chatHistoryReducer(chatHistory, action) {
   const history = chatHistory[bookId] || [];
 
   if (action.type == "add") {
-    const historyEntry = { question, answer, quote, references };
-    return { ...chatHistory, [bookId]: history.concat(historyEntry) }
+    const id = crypto.randomUUID();
+    const historyEntry = { question, answer, quote, references, id };
+    return { ...chatHistory, [bookId]: [historyEntry, ...history] }
   } else {
     throw new Error("Invalid action type");
   }
@@ -51,10 +52,10 @@ function Reference({ reference }) {
 function ChatHistoryEntry({ history }) {
   const [expand, setExpand] = useState(false);
   const { question, answer, quote } = history;
-  return <div className="chat-history-entry" onClick={() => setExpand(e => !e)}>
+  return <div className="chat-history-entry">
     <div className="question">{question}</div>
     <div className="answer">{answer}</div>
-    <div className="quote">{quote}</div>
+    <div className="quote" onClick={() => setExpand(e => !e)} title="Click to expand">{quote}</div>
     <div className={"references " + (expand && "expanded")} >
       {history.references.map(r => <Reference key={r.id} reference={r} />)}
     </div>
@@ -65,7 +66,7 @@ function ChatHistoryBacklog({ chatHistory }) {
   console.log(chatHistory);
   return <div className="chat-history-backlog">
     {chatHistory.map(entry =>
-      <ChatHistoryEntry history={entry} />
+      <ChatHistoryEntry key={entry.id} history={entry} />
     )}
   </div>;
 }
@@ -79,14 +80,16 @@ function askQuestion(question, bookId, dispatch) {
 
 function AskBar({ bookId, dispatchChatHistory }) {
   const input_ref = useRef(null);
+  const onSubmit = (e: InputEvent) => {
+    e.preventDefault();
+    askQuestion(input_ref.current.value, bookId, dispatchChatHistory);
+    input_ref.current.value = "";
+  };
 
-  return <div className="ask-bar">
+  return <form className="ask-bar" onSubmit={onSubmit}>
     <input type="text" ref={input_ref} />
-    <button onClick={() => {
-      askQuestion(input_ref.current.value, bookId, dispatchChatHistory);
-      input_ref.current.value = "";
-    }}>Ask</button>
-  </div >;
+    <button>Ask</button>
+  </form>;
 }
 
 function ChatWindow({ bookId, book, chatHistory, dispatchChatHistory }) {
