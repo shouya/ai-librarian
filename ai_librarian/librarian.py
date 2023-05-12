@@ -4,6 +4,7 @@ import subprocess
 import json
 import sys
 import shutil
+import uuid
 
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
@@ -12,6 +13,7 @@ from .loader import EpubBookLoader
 from .embedder import OpenAIEmbedder
 from .doc_store import ChromaDocStore
 from .retriever import ContextualBookRetriever
+from .library import Library
 
 
 class Librarian:
@@ -132,7 +134,34 @@ class Librarian:
         """Get a chatbot."""
         return ChatOpenAI(temperature=0.5)
 
-    def ask_question(self, question):
+    def ask_question_logged(self, question):
+        """Ask the librarian a question and log it."""
+        resp = self.ask_question_raw(question)
+
+        answer = resp.get("answer")
+        log_id = uuid.uuid4()
+        rel_docs = [
+            {k: v for k, v in doc.items() if k != "embedding"}
+            for doc in resp.get("rel_docs", [])
+        ]
+
+        extra = {
+            "error": resp.get("error"),
+            "quote": resp.get("quote"),
+            "rel_docs": rel_docs,
+        }
+
+        library = Library.instance()
+        library.add_chat_log(self.book_id, log_id, question, answer, extra)
+
+        return {
+            "question": question,
+            "answer": answer,
+            "log_id": log_id,
+            **extra,
+        }
+
+    def ask_question_raw(self, question):
         """Ask the librarian a question."""
         # Uncomment for debugging
         # return {"rel_docs": [], "answer": "DUMMY", "quote": "DUMMY"}

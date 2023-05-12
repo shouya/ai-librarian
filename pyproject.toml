@@ -17,6 +17,10 @@ classifiers = [
   "Environment :: Console",
 ]
 
+[tool.setuptools.packages.find]
+include = ["ai_librarian"]
+namespaces = true
+
 [project.urls]
 homepage = "https://github.com/shouya/ai-librarian"
 

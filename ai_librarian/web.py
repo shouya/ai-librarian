@@ -1,63 +1,32 @@
 from flask import Flask, request
 
 from .librarian import Librarian
+from .library import Library
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../web/dist/")
 
 
-@app.route("/ask")
-def ask():
-    book_id = request.args.get("book_id")
-    if not book_id:
-        raise ValueError("book_id is required")
-    q = request.args.get("q")
-    if not q:
+@app.route("/books", methods=["GET"])
+def list_books():
+    return Library.instance().list_books()
+
+
+@app.route("/books/<book_id>/ask", methods=["POST"])
+def ask(book_id):
+    question = request.args.get("q")
+    if not question:
         raise ValueError("q is required")
 
-    librarian = Librarian(book_id)
-    result = librarian.ask_question(q)
-    result["rel_docs"] = [doc.dict() for doc in result["rel_docs"]]
-    for d in result["rel_docs"]:
-        d.pop("embedding")
-    return result
+    librarian = Library.instance().get_librarian(book_id)
+    return librarian.ask_question_logged(question)
 
 
-@app.route("/")
-def index():
-    return """
-<html>
-<body>
-<h1>AI Librarian</h1>
-<p>Ask a question about a book</p>
-<script>
-function ask() {
-    var book_id = document.getElementById("book_id").value;
-    var q = document.getElementById("q").value;
-    var url = "/ask?book_id=" + book_id + "&q=" + encodeURIComponent(q);
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onload = function (e) {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                var result = JSON.parse(xhr.responseText);
-                document.getElementById("answer").innerHTML = result.answer;
-            } else {
-                console.error(xhr.statusText);
-            }
-        }
-    };
-    xhr.onerror = function (e) {
-        console.error(xhr.statusText);
-    };
-    xhr.send(null);
-}
-</script>
-<label for="book_id">Book ID:</label><br>
-<input type="text" id="book_id" name="book_id" value="1"><br>
-<label for="q">Question:</label><br>
-<input type="text" id="q" name="q" value="What is the meaning of life?"><br><br>
-<input type="submit" value="Submit" onclick="ask()">
-<p id="answer"></p>
-</body>
-</html>
-"""
+@app.route("/books/<book_id>/history", methods=["GET"])
+def history(book_id):
+    return Library.instance().list_chat_logs(book_id)
+
+
+@app.route("/books/<book_id>/history/<log_id>", methods=["DELETE"])
+def remove_history(book_id, log_id):
+    Library.instance().remove_chat_log(book_id, log_id)
+    return "OK"

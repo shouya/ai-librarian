@@ -3,12 +3,22 @@ import sqlite3
 import json
 
 from .librarian import Librarian
+from . import LIBRARIAN_DIR
 
 
 class Library:
     """Library is a class that manages the database of books and chat logs."""
 
-    def __init__(self, conf_dir):
+    _instance = None
+
+    @staticmethod
+    def instance():
+        """Get the singleton instance of the library."""
+        if Library._instance is None:
+            Library._instance = Library()
+        return Library._instance
+
+    def __init__(self, conf_dir=LIBRARIAN_DIR):
         """Initialize the library with the path to the configuration directory."""
         db_path = conf_dir + "/library.db"
         self.conn = sqlite3.connect(db_path)
@@ -29,7 +39,7 @@ class Library:
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS chat_logs (
-                history_id TEXT PRIMARY KEY,
+                log_id TEXT PRIMARY KEY,
                 book_id INTEGER NOT NULL,
                 question TEXT NOT NULL,
                 answer TEXT NOT NULL,
@@ -51,26 +61,26 @@ class Library:
         )
         self.conn.commit()
 
-    def add_chat_log(self, book_id, history_id, question, answer, extra):
+    def add_chat_log(self, book_id, log_id, question, answer, extra):
         """Add a chat log to the library."""
         extra = json.dumps(extra)
         self.conn.execute(
             """
-            INSERT INTO chat_logs (book_id, history_id, question, answer, extra)
+            INSERT INTO chat_logs (book_id, log_id, question, answer, extra)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (book_id, history_id, question, answer, extra),
+            (book_id, log_id, question, answer, extra),
         )
         self.conn.commit()
 
-    def remove_chat_log(self, book_id, history_id):
+    def remove_chat_log(self, book_id, log_id):
         """Remove a chat log from the library."""
         self.conn.execute(
             """
             DELETE FROM chat_logs
-            WHERE book_id = ? AND history_id = ?
+            WHERE book_id = ? AND log_id = ?
             """,
-            (book_id, history_id),
+            (book_id, log_id),
         )
         self.conn.commit()
 
@@ -91,20 +101,21 @@ class Library:
         """List all chat logs for a book."""
         cursor = self.conn.execute(
             """
-            SELECT history_id, question, answer, extra
+            SELECT log_id, question, answer, extra
             FROM chat_logs
             WHERE book_id = ?
             """,
             (book_id,),
         )
+
         return [
             {
-                "history_id": history_id,
+                "log_id": log_id,
                 "question": question,
                 "answer": answer,
-                "extra": json.loads(extra),
+                **json.loads(extra),
             }
-            for history_id, question, answer, extra in cursor.fetchall()
+            for log_id, question, answer, extra in cursor.fetchall()
         ]
 
     def register_book(self, book_name, path_to_book):
