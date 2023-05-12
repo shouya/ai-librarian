@@ -28,7 +28,7 @@ class Librarian:
             os.makedirs(book_dir)
             shutil.copy(book_file, book_dir)
 
-        return Librarian(book_id)
+        return Librarian(book_id, loader)
 
     def __init__(self, book_id, loader=None):
         """Initialize the librarian."""
