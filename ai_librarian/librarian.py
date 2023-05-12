@@ -139,9 +139,9 @@ class Librarian:
         resp = self.ask_question_raw(question)
 
         answer = resp.get("answer")
-        log_id = uuid.uuid4()
+        log_id = str(uuid.uuid4())
         rel_docs = [
-            {k: v for k, v in doc.items() if k != "embedding"}
+            {k: v for k, v in doc.dict().items() if k != "embedding"}
             for doc in resp.get("rel_docs", [])
         ]
 
@@ -233,9 +233,9 @@ def interactive(librarian):
         if question.strip() == "!quit" or question.strip() == "!q":
             break
 
-        resp = librarian.ask_question(question)
+        resp = librarian.ask_question_logged(question)
 
-        if "error" in resp:
+        if resp.get("error"):
             print(f"Error: {resp['error']}")
             continue
 

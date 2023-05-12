@@ -1,19 +1,21 @@
 import React, { StrictMode, useState, useReducer, useRef, useEffect } from "react";
 // import { useImmer, useImmerReducer } from "use-immer";
 import { createRoot } from "react-dom/client";
-import { requestToGetAnswer, initHistory } from "./data";
 import { listBooks, listHistory, ask } from "./api";
 
 function chatHistoryReducer(chatHistory, action) {
-    const { bookId, question, answer, quote, references } = action;
+    const { bookId } = action;
     const history = chatHistory[bookId] || [];
 
     if (action.type == "add") {
-        const id = crypto.randomUUID();
-        const historyEntry = { question, answer, quote, references, id };
+        const { question, answer, quote, log_id, rel_docs } = action;
+        const historyEntry = {
+            question, answer, quote, id: log_id, references: rel_docs
+        };
         return { ...chatHistory, [bookId]: [historyEntry, ...history] }
     } else if (action.type == "init") {
-        return action.history;
+        console.log({ ...chatHistory, [bookId]: action.history })
+        return { ...chatHistory, [bookId]: action.history }
     } else {
         throw new Error("Invalid action type");
     }
@@ -66,7 +68,6 @@ function ChatHistoryEntry({ history }) {
 }
 
 function ChatHistoryBacklog({ chatHistory }) {
-    console.log(chatHistory);
     return <div className="chat-history-backlog">
         {chatHistory.map(entry =>
             <ChatHistoryEntry key={entry.id} history={entry} />
@@ -74,10 +75,18 @@ function ChatHistoryBacklog({ chatHistory }) {
     </div>;
 }
 
-function askQuestion(question, bookId, dispatch) {
-    requestToGetAnswer({ question, bookId }, resp => {
-        const { answer, quote, rel_docs } = resp;
-        dispatch({ type: "add", bookId, question, answer, quote, references: rel_docs });
+function askQuestion(bookId, question, dispatch) {
+    ask(bookId, question, resp => {
+        const { log_id, answer, quote, rel_docs } = resp;
+        dispatch({
+            type: "add",
+            bookId,
+            question,
+            answer,
+            quote,
+            log_id,
+            rel_docs
+        });
     });
 }
 
@@ -85,7 +94,8 @@ function AskBar({ bookId, dispatchChatHistory }) {
     const input_ref = useRef(null);
     const onSubmit = (e: InputEvent) => {
         e.preventDefault();
-        askQuestion(input_ref.current.value, bookId, dispatchChatHistory);
+        const question = input_ref.current.value
+        askQuestion(bookId, question, dispatchChatHistory);
         input_ref.current.value = "";
     };
 
@@ -116,7 +126,7 @@ function App() {
 
     useEffect(() => {
         listHistory(currentBookId, history => {
-            dispatchChatHistory({ type: "init", history });
+            dispatchChatHistory({ type: "init", bookId: currentBookId, history });
         });
     }, [currentBookId]);
 

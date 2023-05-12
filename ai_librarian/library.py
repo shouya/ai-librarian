@@ -26,8 +26,7 @@ class Library:
 
     def create_schema(self):
         """Create the database schema if it does not exist."""
-        cur = self.conn.cursor()
-        cur.execute(
+        self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS books (
                 book_id TEXT PRIMARY KEY,
@@ -36,58 +35,54 @@ class Library:
             );
             """
         )
-
-        cur.execute(
+        self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS chat_logs (
                 log_id TEXT PRIMARY KEY,
                 book_id INTEGER NOT NULL,
                 question TEXT NOT NULL,
-                answer TEXT NOT NULL,
-                extra TEXT NOT NULL,
+                answer TEXT,
+                extra TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (book_id) REFERENCES books (book_id)
             );
             """
         )
-        cur.close()
+        self.conn.commit()
 
     def add_book(self, name, book_id):
         """Add a book to the library."""
-        cur = self.conn.cursor()
-        cur.execute(
+        self.conn.execute(
             """
             INSERT INTO books (name, book_id)
             VALUES (?, ?)
             """,
             (name, book_id),
         )
-        cur.close()
+        self.conn.commit()
 
     def add_chat_log(self, book_id, log_id, question, answer, extra):
         """Add a chat log to the library."""
         extra = json.dumps(extra)
-        cur = self.conn.cursor()
-        cur.execute(
+        self.conn.execute(
             """
             INSERT INTO chat_logs (book_id, log_id, question, answer, extra)
             VALUES (?, ?, ?, ?, ?)
             """,
             (book_id, log_id, question, answer, extra),
         )
-        cur.close()
+        self.conn.commit()
 
     def remove_chat_log(self, book_id, log_id):
         """Remove a chat log from the library."""
-        cur = self.conn.cursor()
-        cur.execute(
+        self.conn.execute(
             """
             DELETE FROM chat_logs
             WHERE book_id = ? AND log_id = ?
             """,
             (book_id, log_id),
         )
-        cur.close()
+        self.conn.commit()
 
     def list_books(self) -> List[dict]:
         """List all books in the library."""
@@ -153,6 +148,8 @@ class Library:
 
 if __name__ == "__main__":
     lib = Library()
-    lib.add_book("A Sport and a Pastime", "5aaab36d14b7f88f326d5fab9")
-    print(lib.list_chat_logs("5aaab36d14b7f88f326d5fab9"))
+    lib.add_book(
+        "A Sport and a Pastime", "5aaab36d14b7f88f326d537e395ffab9"
+    )
+    print(lib.list_chat_logs("5aaab36d14b7f88f326d537e395ffab9"))
     print(LIBRARIAN_DIR)
