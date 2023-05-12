@@ -8,6 +8,16 @@ export const listBooks = (callback) => {
         .catch(error => console.log(error));
 };
 
+export const listHistory = (book_id, callback) => {
+    return fetch(`/api/books/${book_id}/history`)
+        .then(response => response.json())
+        .then(json => json.map(book => {
+            return { id: book.book_id, title: book.name }
+        }))
+        .then(json => callback(json))
+        .catch(error => console.log(error));
+};
+
 export const ask = (book_id: string, question: string, callback) => {
     return fetch(`/api/books/${book_id}/ask?q=${question}`, {
         method: "POST",

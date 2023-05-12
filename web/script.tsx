@@ -2,7 +2,7 @@ import React, { StrictMode, useState, useReducer, useRef, useEffect } from "reac
 // import { useImmer, useImmerReducer } from "use-immer";
 import { createRoot } from "react-dom/client";
 import { requestToGetAnswer, initHistory } from "./data";
-import { listBooks, ask } from "./api";
+import { listBooks, listHistory, ask } from "./api";
 
 function chatHistoryReducer(chatHistory, action) {
     const { bookId, question, answer, quote, references } = action;
@@ -12,6 +12,8 @@ function chatHistoryReducer(chatHistory, action) {
         const id = crypto.randomUUID();
         const historyEntry = { question, answer, quote, references, id };
         return { ...chatHistory, [bookId]: [historyEntry, ...history] }
+    } else if (action.type == "init") {
+        return action.history;
     } else {
         throw new Error("Invalid action type");
     }
@@ -103,7 +105,7 @@ function ChatWindow({ bookId, book, chatHistory, dispatchChatHistory }) {
 function App() {
     const [bookList, setBookList] = useState([]);
     const [currentBookId, setCurrentBookId] = useState(null);
-    const [chatHistory, dispatchChatHistory] = useReducer(chatHistoryReducer, initHistory);
+    const [chatHistory, dispatchChatHistory] = useReducer(chatHistoryReducer, []);
 
     useEffect(() => {
         listBooks(books => {
@@ -111,6 +113,12 @@ function App() {
             setBookList(books);
         });
     }, []);
+
+    useEffect(() => {
+        listHistory(currentBookId, history => {
+            dispatchChatHistory({ type: "init", history });
+        });
+    }, [currentBookId]);
 
 
     const currentBook = bookList.find(book => book.id == currentBookId);
