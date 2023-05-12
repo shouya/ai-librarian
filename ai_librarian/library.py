@@ -1,6 +1,7 @@
 from typing import List, Tuple
 import sqlite3
 import json
+import os
 
 from .const import LIBRARIAN_DIR
 
@@ -19,13 +20,14 @@ class Library:
 
     def __init__(self, conf_dir=LIBRARIAN_DIR):
         """Initialize the library with the path to the configuration directory."""
-        db_path = conf_dir + "/library.db"
-        self.conn = sqlite3.connect(db_path)
+        db_path = os.path.expanduser(conf_dir + "/library.db")
+        self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.create_schema()
 
     def create_schema(self):
         """Create the database schema if it does not exist."""
-        self.conn.execute(
+        cur = self.conn.cursor()
+        cur.execute(
             """
             CREATE TABLE IF NOT EXISTS books (
                 book_id TEXT PRIMARY KEY,
@@ -35,7 +37,7 @@ class Library:
             """
         )
 
-        self.conn.execute(
+        cur.execute(
             """
             CREATE TABLE IF NOT EXISTS chat_logs (
                 log_id TEXT PRIMARY KEY,
@@ -48,40 +50,44 @@ class Library:
             );
             """
         )
+        cur.close()
 
     def add_book(self, name, book_id):
         """Add a book to the library."""
-        self.conn.execute(
+        cur = self.conn.cursor()
+        cur.execute(
             """
             INSERT INTO books (name, book_id)
             VALUES (?, ?)
             """,
             (name, book_id),
         )
-        self.conn.commit()
+        cur.close()
 
     def add_chat_log(self, book_id, log_id, question, answer, extra):
         """Add a chat log to the library."""
         extra = json.dumps(extra)
-        self.conn.execute(
+        cur = self.conn.cursor()
+        cur.execute(
             """
             INSERT INTO chat_logs (book_id, log_id, question, answer, extra)
             VALUES (?, ?, ?, ?, ?)
             """,
             (book_id, log_id, question, answer, extra),
         )
-        self.conn.commit()
+        cur.close()
 
     def remove_chat_log(self, book_id, log_id):
         """Remove a chat log from the library."""
-        self.conn.execute(
+        cur = self.conn.cursor()
+        cur.execute(
             """
             DELETE FROM chat_logs
             WHERE book_id = ? AND log_id = ?
             """,
             (book_id, log_id),
         )
-        self.conn.commit()
+        cur.close()
 
     def list_books(self) -> List[dict]:
         """List all books in the library."""
@@ -146,9 +152,7 @@ class Library:
 
 
 if __name__ == "__main__":
-    import sys
-
-    lib = Library(sys.argv[1])
+    lib = Library()
     lib.add_book("A Sport and a Pastime", "5aaab36d14b7f88f326d5fab9")
     print(lib.list_chat_logs("5aaab36d14b7f88f326d5fab9"))
     print(LIBRARIAN_DIR)

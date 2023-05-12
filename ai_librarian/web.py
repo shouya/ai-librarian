@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from .librarian import Librarian
 from .library import Library
@@ -13,7 +13,7 @@ def index():
 
 @app.route("/api/books", methods=["GET"])
 def list_books():
-    return Library.instance().list_books()
+    return jsonify(Library.instance().list_books())
 
 
 @app.route("/api/books/<book_id>/ask", methods=["POST"])
