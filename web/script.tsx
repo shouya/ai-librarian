@@ -29,18 +29,21 @@ function BookListItem({ book, isCurrent, setCurrentBookId }) {
 }
 
 function BookList({ bookList, currentBookId, setCurrentBookId }) {
-    return <div className="book-list">
-        {
-            bookList.map(book =>
-                <BookListItem
-                    key={book.id}
-                    book={book}
-                    isCurrent={book.id === currentBookId}
-                    setCurrentBookId={setCurrentBookId}
-                />
-            )
-        }
-    </div>;
+    return <>
+        <div className="book-list">
+            <h2 class="heading" >Select a book</h2>
+            {
+                bookList.map(book =>
+                    <BookListItem
+                        key={book.id}
+                        book={book}
+                        isCurrent={book.id === currentBookId}
+                        setCurrentBookId={setCurrentBookId}
+                    />
+                )
+            }
+        </div>
+    </>;
 }
 
 function Reference({ reference }) {
