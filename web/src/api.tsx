@@ -3,9 +3,9 @@ import { BookId, Book, HistoryEntry } from "./types";
 export async function listBooks(): Promise<Book[]> {
   const resp = await fetch("/api/books");
   const json = await resp.json();
-  return json.map(
-    book => {return { id: book.book_id, title: book.name } as Book}
-  );
+  return json.map((book) => {
+    return { id: book.book_id, title: book.name } as Book;
+  });
 }
 
 export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
@@ -16,17 +16,18 @@ export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
   const resp = await fetch(`/api/books/${bookId}/history`);
   const json = await resp.json();
 
-  return json.map(entry => {
+  return json.map((entry) => {
     return {
       ...entry,
       references: entry.rel_docs || [],
-      id: entry.log_id
+      id: entry.log_id,
     } as HistoryEntry;
   });
-};
+}
 
 export async function ask(
-  bookId: BookId, question: string
+  bookId: BookId,
+  question: string
 ): Promise<HistoryEntry | null> {
   if (bookId === null || bookId === undefined || question === "") {
     return null;
@@ -34,7 +35,7 @@ export async function ask(
 
   const url = `/api/books/${bookId}/ask?q=${encodeURIComponent(question)}`;
   const headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
   const resp = await fetch(url, { method: "POST", headers });
   const entry = await resp.json();
@@ -42,6 +43,6 @@ export async function ask(
   return {
     ...entry,
     references: entry.rel_docs || [],
-    id: entry.log_id
+    id: entry.log_id,
   } as HistoryEntry;
-};
+}
