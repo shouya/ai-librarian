@@ -1,6 +1,6 @@
 {
   "name": "ai-librarian-fe",
-  "source": "index.html",
+  "source": "public/index.html",
   "scripts": {
     "start": "npx parcel",
     "build": "npx parcel build"
