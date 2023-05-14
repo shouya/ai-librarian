@@ -1,7 +1,7 @@
 import React, { useReducer, useRef, useEffect } from "react";
 
 import { listHistory, ask } from "./api";
-import { ChatHistoryBacklog } from "./history";
+import { HistoryBacklog } from "./history";
 
 import * as t from "./types";
 
@@ -32,17 +32,17 @@ async function askQuestion(
 
 interface IAskBarProps {
   bookId: t.BookId;
-  dispatchChatHistory: (action: HistoryAction) => void;
+  dispatchHistory: (action: HistoryAction) => void;
 }
 
-export function AskBar({ bookId, dispatchChatHistory }: IAskBarProps) {
+export function AskBar({ bookId, dispatchHistory }: IAskBarProps) {
   const input_ref = useRef(null);
   const onSubmit = (e) => {
     e.preventDefault();
     const question = input_ref.current.value;
     input_ref.current.value = "";
 
-    askQuestion(bookId, question, dispatchChatHistory);
+    askQuestion(bookId, question, dispatchHistory);
   };
 
   return (
@@ -57,18 +57,18 @@ interface IChatWindowProps {
   bookId: t.BookId;
 }
 export function ChatWindow({ bookId }: IChatWindowProps) {
-  const [chatHistory, dispatchChatHistory] = useReducer(historyReducer, []);
+  const [history, dispatchHistory] = useReducer(historyReducer, []);
 
   useEffect(() => {
     listHistory(bookId).then((history) =>
-      dispatchChatHistory({ type: "init", history })
+      dispatchHistory({ type: "init", history })
     );
   }, [bookId]);
 
   return (
     <div className="chat-window">
-      <ChatHistoryBacklog chatHistory={chatHistory} />
-      <AskBar bookId={bookId} dispatchChatHistory={dispatchChatHistory} />
+      <HistoryBacklog history={history} />
+      <AskBar bookId={bookId} dispatchHistory={dispatchHistory} />
     </div>
   );
 }
