@@ -39,3 +39,5 @@ export interface HistoryEntrySuccess {
 }
 
 export type HistoryEntry = HistoryEntryError | HistoryEntrySuccess;
+
+export type History = HistoryEntry[];

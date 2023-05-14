@@ -3,18 +3,15 @@ import React, { useReducer, useRef, useEffect } from "react";
 import { listHistory, ask } from "./api";
 import { ChatHistoryBacklog } from "./history";
 
-function chatHistoryReducer(history, action) {
+import * as t from "./types";
+
+type HistoryAction =
+  | { type: "add"; entry: t.HistoryEntry }
+  | { type: "init"; history: t.History };
+
+function historyReducer(history: t.History, action: HistoryAction) {
   if (action.type == "add") {
-    const { id, question, answer, quote, error, references } = action;
-    const historyEntry = {
-      id,
-      question,
-      answer,
-      quote,
-      error,
-      references,
-    };
-    return [...history, historyEntry];
+    return [...history, action.entry];
   } else if (action.type == "init") {
     return action.history;
   } else {
@@ -22,14 +19,23 @@ function chatHistoryReducer(history, action) {
   }
 }
 
-async function askQuestion(bookId, question, dispatch) {
-  const answer = await ask(bookId, question);
-  if (answer === null) return;
+async function askQuestion(
+  bookId: t.BookId,
+  question: string,
+  dispatch: (action: HistoryAction) => void
+) {
+  const entry = await ask(bookId, question);
+  if (entry === null) return;
 
-  dispatch({ ...answer, bookId, type: "add" });
+  dispatch({ type: "add", entry: entry });
 }
 
-export function AskBar({ bookId, dispatchChatHistory }) {
+interface IAskBarProps {
+  bookId: t.BookId;
+  dispatchChatHistory: (action: HistoryAction) => void;
+}
+
+export function AskBar({ bookId, dispatchChatHistory }: IAskBarProps) {
   const input_ref = useRef(null);
   const onSubmit = (e) => {
     e.preventDefault();
@@ -47,8 +53,11 @@ export function AskBar({ bookId, dispatchChatHistory }) {
   );
 }
 
-export function ChatWindow({ bookId }) {
-  const [chatHistory, dispatchChatHistory] = useReducer(chatHistoryReducer, []);
+interface IChatWindowProps {
+  bookId: t.BookId;
+}
+export function ChatWindow({ bookId }: IChatWindowProps) {
+  const [chatHistory, dispatchChatHistory] = useReducer(historyReducer, []);
 
   useEffect(() => {
     listHistory(bookId).then((history) =>
