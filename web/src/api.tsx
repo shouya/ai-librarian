@@ -16,13 +16,15 @@ export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
   const resp = await fetch(`/api/books/${bookId}/history`);
   const json = await resp.json();
 
-  return json.map((entry) => {
-    return {
-      ...entry,
-      references: entry.rel_docs || [],
-      id: entry.log_id,
-    } as HistoryEntry;
-  });
+  return json
+    .map((entry) => {
+      return {
+        ...entry,
+        references: entry.rel_docs || [],
+        id: entry.log_id,
+      } as HistoryEntry;
+    })
+    .reverse();
 }
 
 export async function ask(

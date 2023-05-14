@@ -11,7 +11,7 @@ type HistoryAction =
 
 function historyReducer(history: t.History, action: HistoryAction) {
   if (action.type == "add") {
-    return [...history, action.entry];
+    return [action.entry, ...history];
   } else if (action.type == "init") {
     return action.history;
   } else {
@@ -32,22 +32,32 @@ async function askQuestion(
 
 interface IAskBarProps {
   bookId: t.BookId;
+  history: t.History;
   dispatchHistory: (action: HistoryAction) => void;
 }
 
-export function AskBar({ bookId, dispatchHistory }: IAskBarProps) {
-  const input_ref = useRef(null);
-  const onSubmit = (e) => {
+export function AskBar({ bookId, history, dispatchHistory }: IAskBarProps) {
+  const input_ref = useRef<HTMLInputElement>(null);
+  const onSubmit = (e: InputEvent) => {
     e.preventDefault();
     const question = input_ref.current.value;
     input_ref.current.value = "";
-
     askQuestion(bookId, question, dispatchHistory);
+  };
+
+  const onKeyUp = (e: KeyboardEvent) => {
+    // when press up, bring up the previous question
+    if (e.key !== "ArrowUp") return;
+    if (input_ref.current.value !== "") return;
+    const last = history[0];
+    if (last === undefined) return;
+
+    input_ref.current.value = last.question;
   };
 
   return (
     <form className="ask-bar" onSubmit={onSubmit}>
-      <input type="text" ref={input_ref} />
+      <input type="text" ref={input_ref} onKeyUp={onKeyUp} />
       <button>Ask</button>
     </form>
   );
@@ -68,7 +78,11 @@ export function ChatWindow({ bookId }: IChatWindowProps) {
   return (
     <div className="chat-window">
       <HistoryBacklog history={history} />
-      <AskBar bookId={bookId} dispatchHistory={dispatchHistory} />
+      <AskBar
+        bookId={bookId}
+        history={history}
+        dispatchHistory={dispatchHistory}
+      />
     </div>
   );
 }
