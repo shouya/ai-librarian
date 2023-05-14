@@ -8,9 +8,9 @@ function chatHistoryReducer(chatHistory, action) {
   const history = chatHistory[bookId] || [];
 
   if (action.type == "add") {
-    const { question, answer, quote, log_id, rel_docs } = action;
+    const { id, question, answer, quote, error, references } = action;
     const historyEntry = {
-      question, answer, quote, id: log_id, references: rel_docs
+      id, question, answer, quote, error, references
     };
     return { ...chatHistory, [bookId]: [historyEntry, ...history] }
   } else if (action.type == "init") {
@@ -77,20 +77,11 @@ function ChatHistoryBacklog({ chatHistory }) {
   </div>;
 }
 
-function askQuestion(bookId, question, dispatch) {
-  if (question == "") return;
-  ask(bookId, question, resp => {
-    const { log_id, answer, quote, rel_docs } = resp;
-    dispatch({
-      type: "add",
-      bookId,
-      question,
-      answer,
-      quote,
-      log_id,
-      rel_docs
-    });
-  });
+async function askQuestion(bookId, question, dispatch) {
+  const answer = await ask(bookId, question);
+  if (answer === null) return;
+
+  dispatch({ ...answer, bookId, type: "add" });
 }
 
 function AskBar({ bookId, dispatchChatHistory }) {
@@ -98,8 +89,9 @@ function AskBar({ bookId, dispatchChatHistory }) {
   const onSubmit = (e: InputEvent) => {
     e.preventDefault();
     const question = input_ref.current.value
-    askQuestion(bookId, question, dispatchChatHistory);
     input_ref.current.value = "";
+
+    askQuestion(bookId, question, dispatchChatHistory);
   };
 
   return <form className="ask-bar" onSubmit={onSubmit}>
@@ -121,16 +113,17 @@ function App() {
   const [chatHistory, dispatchChatHistory] = useReducer(chatHistoryReducer, []);
 
   useEffect(() => {
-    listBooks(books => {
+    listBooks().then(books => {
       setCurrentBookId(books[0]?.id);
       setBookList(books);
     });
   }, []);
 
   useEffect(() => {
-    listHistory(currentBookId, history => {
-      dispatchChatHistory({ type: "init", bookId: currentBookId, history });
-    });
+    listHistory(currentBookId)
+      .then(history => {
+        dispatchChatHistory({ type: "init", bookId: currentBookId, history });
+      });
   }, [currentBookId]);
 
 

@@ -158,6 +158,7 @@ class Librarian:
             "question": question,
             "answer": answer,
             "log_id": log_id,
+            "book_id": self.book_id,
             **extra,
         }
 

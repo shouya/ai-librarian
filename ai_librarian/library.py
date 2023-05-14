@@ -110,6 +110,7 @@ class Library:
 
         return [
             {
+                "book_id": book_id,
                 "log_id": log_id,
                 "question": question,
                 "answer": answer,

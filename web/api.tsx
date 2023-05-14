@@ -1,50 +1,47 @@
-export const listBooks = (callback) => {
-  return fetch("/api/books")
-    .then(response => response.json())
-    .then(json => json.map(book => {
-      return { id: book.book_id, title: book.name }
-    }))
-    .then(json => callback(json))
-    .catch(error => console.log(error));
-};
+import { BookId, Book, HistoryEntry } from "./types";
 
-export const listHistory = (book_id, callback) => {
-  if (!book_id) {
-    console.log(book_id);
-    return callback([]);
+export async function listBooks(): Promise<Book[]> {
+  const resp = await fetch("/api/books");
+  const json = await resp.json();
+  return json.map(
+    book => {return { id: book.book_id, title: book.name } as Book}
+  );
+}
+
+export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
+  if (bookId === null || bookId === undefined) {
+    return [];
   }
 
-  return fetch(`/api/books/${book_id}/history`)
-    .then(response => response.json())
-    .then(json => json.map(entry => {
-      return {
-        ...entry,
-        references: entry.rel_docs || [],
-        id: entry.log_id
-      }
-    }))
-    .then(json => callback(json))
-    .catch(error => console.log(error));
+  const resp = await fetch(`/api/books/${bookId}/history`);
+  const json = await resp.json();
+
+  return json.map(entry => {
+    return {
+      ...entry,
+      references: entry.rel_docs || [],
+      id: entry.log_id
+    } as HistoryEntry;
+  });
 };
 
-export const ask = (book_id: string, question: string, callback) => {
-  if (!book_id) {
-    console.log(book_id);
-    return callback(null);
+export async function ask(
+  bookId: BookId, question: string
+): Promise<HistoryEntry | null> {
+  if (bookId === null || bookId === undefined || question === "") {
+    return null;
   }
 
-  return fetch(`/api/books/${book_id}/ask?q=${encodeURIComponent(question)}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    }
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then(json => callback(json))
-    .catch(error => console.log(error));
+  const url = `/api/books/${bookId}/ask?q=${encodeURIComponent(question)}`;
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  const resp = await fetch(url, { method: "POST", headers });
+  const entry = await resp.json();
+
+  return {
+    ...entry,
+    references: entry.rel_docs || [],
+    id: entry.log_id
+  } as HistoryEntry;
 };
