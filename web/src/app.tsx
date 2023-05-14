@@ -4,9 +4,11 @@ import { listBooks } from "./api";
 import { ChatWindow } from "./chat_window";
 import BookList from "./book_list";
 
+import * as t from "./types";
+
 export default function App() {
-  const [bookList, setBookList] = useState([]);
-  const [currentBookId, setCurrentBookId] = useState(null);
+  const [bookList, setBookList] = useState<t.Book[]>([]);
+  const [currentBookId, setCurrentBookId] = useState<t.BookId>(null);
 
   useEffect(() => {
     listBooks().then((books) => {
