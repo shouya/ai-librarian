@@ -41,3 +41,8 @@ export interface HistoryEntrySuccess {
 export type HistoryEntry = HistoryEntryError | HistoryEntrySuccess;
 
 export type History = HistoryEntry[];
+
+export type HistoryAction =
+  | { type: "add"; entry: HistoryEntry }
+  | { type: "init"; history: History }
+  | { type: "delete"; id: HistoryEntryId };

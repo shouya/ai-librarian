@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 
+import { FaTrash } from "react-icons/fa";
+
 import * as t from "./types";
+import { deleteHistory } from "./api";
 
 interface IHistoryEntryProps {
+  bookId: t.BookId;
   entry: t.HistoryEntry;
+  dispatchHistory: (action: t.HistoryAction) => void;
 }
 
-function HistoryEntry({ entry }: IHistoryEntryProps) {
+function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
   const [expand, setExpand] = useState(false);
 
   if (entry.error !== null) {
@@ -17,12 +22,25 @@ function HistoryEntry({ entry }: IHistoryEntryProps) {
     );
   }
 
+  function deleteEntry() {
+    console.log(`Deleting ${entry.id} (${entry.question})`);
+
+    deleteHistory(bookId, entry.id).then(() => {
+      dispatchHistory({ type: "delete", id: entry.id });
+    });
+  }
+
   const { question, answer, quote, references } =
     entry as t.HistoryEntrySuccess;
 
   return (
     <div className="history-entry">
-      <div className="question">{question}</div>
+      <div className="question-line">
+        <div className="question">{question}</div>
+        <div className="del-button" onClick={deleteEntry}>
+          <FaTrash />
+        </div>
+      </div>
       <div className="answer">{answer}</div>
       <div
         className="quote"
@@ -56,14 +74,25 @@ function Reference({ reference }: IReferenceProps) {
 }
 
 interface IHistoryBacklogProps {
+  bookId: t.BookId;
   history: t.History;
+  dispatchHistory: (action: t.HistoryAction) => void;
 }
 
-export function HistoryBacklog({ history }: IHistoryBacklogProps) {
+export function HistoryBacklog({
+  history,
+  dispatchHistory,
+  bookId,
+}: IHistoryBacklogProps) {
   return (
     <div className="history-backlog">
       {history.map((entry) => (
-        <HistoryEntry key={entry.id} entry={entry} />
+        <HistoryEntry
+          key={entry.id}
+          entry={entry}
+          bookId={bookId}
+          dispatchHistory={dispatchHistory}
+        />
       ))}
     </div>
   );

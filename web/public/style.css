@@ -70,6 +70,21 @@ html {
   padding: 15px;
   flex-direction: column;
 }
+.history-entry .question-line {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-entry .del-button {
+  color: #aaa;
+}
+.history-entry .del-button:hover {
+  cursor: pointer;
+  color: #222;
+}
+
 .history-entry .question {
   font-size: 1.3em;
   font-style: italic;

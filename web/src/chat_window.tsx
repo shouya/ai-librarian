@@ -5,15 +5,13 @@ import { HistoryBacklog } from "./history";
 
 import * as t from "./types";
 
-type HistoryAction =
-  | { type: "add"; entry: t.HistoryEntry }
-  | { type: "init"; history: t.History };
-
-function historyReducer(history: t.History, action: HistoryAction) {
+function historyReducer(history: t.History, action: t.HistoryAction) {
   if (action.type == "add") {
     return [action.entry, ...history];
   } else if (action.type == "init") {
     return action.history;
+  } else if (action.type == "delete") {
+    return history.filter((entry) => entry.id !== action.id);
   } else {
     throw new Error("Invalid action type");
   }
@@ -22,7 +20,7 @@ function historyReducer(history: t.History, action: HistoryAction) {
 async function askQuestion(
   bookId: t.BookId,
   question: string,
-  dispatch: (action: HistoryAction) => void
+  dispatch: (action: t.HistoryAction) => void
 ) {
   const entry = await ask(bookId, question);
   if (entry === null) return;
@@ -33,19 +31,19 @@ async function askQuestion(
 interface IAskBarProps {
   bookId: t.BookId;
   history: t.History;
-  dispatchHistory: (action: HistoryAction) => void;
+  dispatchHistory: (action: t.HistoryAction) => void;
 }
 
 export function AskBar({ bookId, history, dispatchHistory }: IAskBarProps) {
   const input_ref = useRef<HTMLInputElement>(null);
-  const onSubmit = (e: InputEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const question = input_ref.current.value;
     input_ref.current.value = "";
     askQuestion(bookId, question, dispatchHistory);
   };
 
-  const onKeyUp = (e: KeyboardEvent) => {
+  const onKeyUp = (e: React.KeyboardEvent) => {
     // when press up, bring up the previous question
     if (e.key !== "ArrowUp") return;
     if (input_ref.current.value !== "") return;
@@ -77,7 +75,11 @@ export function ChatWindow({ bookId }: IChatWindowProps) {
 
   return (
     <div className="chat-window">
-      <HistoryBacklog history={history} />
+      <HistoryBacklog
+        bookId={bookId}
+        history={history}
+        dispatchHistory={dispatchHistory}
+      />
       <AskBar
         bookId={bookId}
         history={history}

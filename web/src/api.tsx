@@ -1,9 +1,9 @@
-import { BookId, Book, HistoryEntry } from "./types";
+import { BookId, Book, HistoryEntry, HistoryEntryId } from "./types";
 
 export async function listBooks(): Promise<Book[]> {
   const resp = await fetch("/api/books");
   const json = await resp.json();
-  return json.map((book) => {
+  return json.map((book: any) => {
     return { id: book.book_id, title: book.name } as Book;
   });
 }
@@ -17,7 +17,7 @@ export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
   const json = await resp.json();
 
   return json
-    .map((entry) => {
+    .map((entry: any) => {
       return {
         ...entry,
         references: entry.rel_docs || [],
@@ -25,6 +25,23 @@ export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
       } as HistoryEntry;
     })
     .reverse();
+}
+
+export async function deleteHistory(
+  bookId: BookId,
+  id: HistoryEntryId
+): Promise<void> {
+  if (
+    bookId === null ||
+    bookId === undefined ||
+    id === null ||
+    id === undefined
+  ) {
+    return;
+  }
+
+  const url = `/api/books/${bookId}/history/${id}`;
+  await fetch(url, { method: "DELETE" });
 }
 
 export async function ask(
