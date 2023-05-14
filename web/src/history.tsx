@@ -1,21 +1,4 @@
-import { useState, useReducer, useRef, useEffect } from "react";
-
-export function chatHistoryReducer(chatHistory, action) {
-  const { bookId } = action;
-  const history = chatHistory[bookId] || [];
-
-  if (action.type == "add") {
-    const { id, question, answer, quote, error, references } = action;
-    const historyEntry = {
-      id, question, answer, quote, error, references
-    };
-    return { ...chatHistory, [bookId]: [historyEntry, ...history] }
-  } else if (action.type == "init") {
-    return { ...chatHistory, [bookId]: action.history }
-  } else {
-    throw new Error("Invalid action type");
-  }
-}
+import { useState, useRef, useEffect } from "react";
 
 export function ChatHistoryEntry({ history }) {
   const [expand, setExpand] = useState(false);
