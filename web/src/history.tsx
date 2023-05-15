@@ -42,7 +42,8 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
     );
   }
 
-  const { answer, quote } = entry as t.HistoryEntrySuccess;
+  const { answer } = entry as t.HistoryEntrySuccess;
+  const quote = entry.quote === "" ? null : entry.quote;
 
   return (
     <div className="history-entry">
@@ -59,7 +60,7 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
             {" "}
             {expanded ? <MdExpandLess /> : <MdExpandMore />}{" "}
           </div>
-          {quote && <div className="quote"> {quote} </div>}
+          <div className="quote"> {quote ?? "<quote not given>"} </div>
         </div>
         <div className={"references " + ((expanded && "expanded") || "")}>
           {references.map((r) => (
@@ -73,10 +74,14 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
 
 interface IReferenceProps {
   reference: t.Reference;
-  quote: string;
+  quote: string | null;
 }
-function Reference({ reference, quote }: IReferenceProps) {
+
+function highlightedInReference({ reference, quote }: IReferenceProps) {
   let { content } = reference;
+  if (quote === null || quote.trim() === "") {
+    return content;
+  }
 
   // normalize the spaces
   content = content.replace(/\s+/gm, " ");
@@ -86,12 +91,12 @@ function Reference({ reference, quote }: IReferenceProps) {
     window.c = content;
   }
 
+  // try to match the quote in a full piece.
   const split = content.split(new RegExp(escapeRegExp(quote), "i"));
-
-  let highlighted_content: string | JSX.Element = content;
+  let highlighted: string | JSX.Element = content;
   if (split.length === 2) {
     const [left, right] = split;
-    highlighted_content = (
+    return (
       <>
         {left}
         <span className="highlight">{quote}</span>
@@ -100,9 +105,21 @@ function Reference({ reference, quote }: IReferenceProps) {
     );
   }
 
+  // try to break down the quote into sentences and highlight segments in the content.
+  const quoteSegments = quote.split(/[,.?!“”]+/).map(s => escapeRegExp(s.trim())).filter(s => s.length > 3);
+  const regexp = quoteSegments.join("|");
+  const html = content.replace(new RegExp(regexp, "ig"), (match) => {
+    return `<span class="highlight">${match}</span>`;
+  });
+
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function Reference({ reference, quote }: IReferenceProps) {
+  const highlighted = highlightedInReference({ reference, quote });
   return (
     <div className="reference">
-      <div className="content">{highlighted_content}</div>
+      <div className="content">{highlighted}</div>
       <div className="metadata">
         <div className="chapter">{reference.metadata.chapter_title}</div>
         <div className="ref-id">{reference.id}</div>
