@@ -162,6 +162,9 @@ html {
   color: gray;
   font-family: monospace;
 }
+.reference .highlight {
+  background-color: lightyellow;
+}
 
 .ask-bar {
   display: flex;

@@ -5,6 +5,7 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import * as t from "./types";
 import { deleteHistory } from "./api";
+import { escapeRegExp } from "./util";
 
 interface IHistoryEntryProps {
   bookId: t.BookId;
@@ -62,7 +63,7 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
         </div>
         <div className={"references " + ((expanded && "expanded") || "")}>
           {references.map((r) => (
-            <Reference key={r.id} reference={r} />
+            <Reference key={r.id} reference={r} quote={quote} />
           ))}
         </div>
       </div>
@@ -72,11 +73,36 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
 
 interface IReferenceProps {
   reference: t.Reference;
+  quote: string;
 }
-function Reference({ reference }: IReferenceProps) {
+function Reference({ reference, quote }: IReferenceProps) {
+  let { content } = reference;
+
+  // normalize the spaces
+  content = content.replace(/\s+/gm, " ");
+  quote = quote.replace(/\s+/gm, " ");
+  if (/whisper/.test(content)) {
+    window.q = quote;
+    window.c = content;
+  }
+
+  const split = content.split(new RegExp(escapeRegExp(quote), "i"));
+
+  let highlighted_content: string | JSX.Element = content;
+  if (split.length === 2) {
+    const [left, right] = split;
+    highlighted_content = (
+      <>
+        {left}
+        <span className="highlight">{quote}</span>
+        {right}
+      </>
+    );
+  }
+
   return (
     <div className="reference">
-      <div className="content">{reference.content}</div>
+      <div className="content">{highlighted_content}</div>
       <div className="metadata">
         <div className="chapter">{reference.metadata.chapter_title}</div>
         <div className="ref-id">{reference.id}</div>
