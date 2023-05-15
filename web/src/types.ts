@@ -25,6 +25,7 @@ export interface HistoryEntryError {
   error: string;
   // answer must be null
   answer: null;
+  references: Reference[];
 }
 
 export interface HistoryEntrySuccess {

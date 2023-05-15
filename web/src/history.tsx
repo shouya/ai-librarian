@@ -14,14 +14,6 @@ interface IHistoryEntryProps {
 function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
   const [expand, setExpand] = useState(false);
 
-  if (entry.error !== null) {
-    return (
-      <div className="history-entry history-entry-error">
-        Error: <span>{entry.error}</span>
-      </div>
-    );
-  }
-
   function deleteEntry() {
     console.log(`Deleting ${entry.id} (${entry.question})`);
 
@@ -30,8 +22,25 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
     });
   }
 
-  const { question, answer, quote, references } =
-    entry as t.HistoryEntrySuccess;
+  const { question, references } = entry;
+
+  if (entry.error !== null) {
+    return (
+      <div className="history-entry history-entry-error">
+        <div className="question-line">
+          <div className="question">{question}</div>
+          <div className="del-button" onClick={deleteEntry}>
+            <FaTrash />
+          </div>
+        </div>
+        <div className="error-message">
+          <span>{entry.error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  const { answer, quote } = entry as t.HistoryEntrySuccess;
 
   return (
     <div className="history-entry">
@@ -42,13 +51,15 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
         </div>
       </div>
       <div className="answer">{answer}</div>
-      <div
-        className="quote"
-        onClick={() => setExpand((e) => !e)}
-        title="Click to expand"
-      >
-        {quote}
-      </div>
+      {quote && (
+        <div
+          className="quote"
+          onClick={() => setExpand((e) => !e)}
+          title="Click to expand"
+        >
+          {quote}
+        </div>
+      )}
       <div className={"references " + (expand && "expanded")}>
         {references.map((r) => (
           <Reference key={r.id} reference={r} />

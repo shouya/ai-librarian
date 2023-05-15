@@ -43,6 +43,10 @@ html {
   font-size: 1.2em;
   text-align: center;
 }
+.book-list-item:hover {
+  /* overrides .current */
+  background-color: #ddd !important;
+}
 
 .book-list-item.current {
   background-color: #eee;
@@ -62,10 +66,17 @@ html {
   flex-direction: column-reverse;
 }
 
+.history-entry:hover {
+  box-shadow: -1px 0 4px #aaa;
+  margin-left: 12px;
+  margin-right: 18px;
+}
+
 .history-entry {
   background-color: #eee;
   border-radius: 10px;
   margin: 10px;
+  margin-right: 20px;
   display: flex;
   padding: 15px;
   flex-direction: column;
@@ -78,10 +89,10 @@ html {
 }
 
 .history-entry .del-button {
+  cursor: pointer;
   color: #aaa;
 }
 .history-entry .del-button:hover {
-  cursor: pointer;
   color: #222;
 }
 
@@ -90,7 +101,6 @@ html {
   font-style: italic;
   line-height: 1.5;
 }
-
 .history-entry .answer {
   border-bottom: 1px dashed #fff;
   padding-bottom: 10px;
@@ -106,6 +116,10 @@ html {
 .history-entry .quote::after {
   /* content: "”"; */
   margin-left: 10px;
+}
+.history-entry .error-message {
+  color: red;
+  padding-bottom: 10px;
 }
 
 .history-entry .references {
