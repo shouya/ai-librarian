@@ -106,12 +106,18 @@ html {
   padding-bottom: 10px;
   margin-bottom: 10px;
 }
-.history-entry .quote {
+.history-entry .quote-line {
+  display: flex;
+  flex-direction: row;
+}
+.history-entry .expand-button {
   cursor: pointer;
+  margin-right: 8px;
+}
+
+.history-entry .quote {
   color: #333;
   font-size: 0.8em;
-  border-left: 0.2em solid #ddd;
-  padding-left: 1em;
 }
 .history-entry .quote::after {
   /* content: "”"; */
@@ -136,9 +142,9 @@ html {
   display: flex;
   flex-direction: column;
   margin: 10px;
-  margin-left: 20px;
+  margin-left: 7px;
   font-size: 0.8em;
-  border-left: 0.2em solid #ddd;
+  border-left: 0.2em solid #bbb;
   padding-left: 1em;
 }
 .reference .metadata {

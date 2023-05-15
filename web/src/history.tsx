@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { FaTrash } from "react-icons/fa";
+import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import * as t from "./types";
 import { deleteHistory } from "./api";
@@ -12,7 +13,7 @@ interface IHistoryEntryProps {
 }
 
 function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
-  const [expand, setExpand] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   function deleteEntry() {
     console.log(`Deleting ${entry.id} (${entry.question})`);
@@ -51,19 +52,19 @@ function HistoryEntry({ bookId, entry, dispatchHistory }: IHistoryEntryProps) {
         </div>
       </div>
       <div className="answer">{answer}</div>
-      {quote && (
-        <div
-          className="quote"
-          onClick={() => setExpand((e) => !e)}
-          title="Click to expand"
-        >
-          {quote}
+      <div className="quote-and-ref">
+        <div className="quote-line">
+          <div className="expand-button" onClick={() => setExpanded((e) => !e)}>
+            {" "}
+            {expanded ? <MdExpandLess /> : <MdExpandMore />}{" "}
+          </div>
+          {quote && <div className="quote"> {quote} </div>}
         </div>
-      )}
-      <div className={"references " + (expand && "expanded")}>
-        {references.map((r) => (
-          <Reference key={r.id} reference={r} />
-        ))}
+        <div className={"references " + ((expanded && "expanded") || "")}>
+          {references.map((r) => (
+            <Reference key={r.id} reference={r} />
+          ))}
+        </div>
       </div>
     </div>
   );

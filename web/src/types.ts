@@ -23,9 +23,9 @@ export interface HistoryEntryError {
   bookId: BookId;
   question: string;
   error: string;
+  references: Reference[];
   // answer must be null
   answer: null;
-  references: Reference[];
 }
 
 export interface HistoryEntrySuccess {
