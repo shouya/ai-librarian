@@ -2,7 +2,7 @@ import React from "react";
 
 import * as t from "./types";
 
-interface IBookListItemProps {
+interface BookListItemProps {
   book: t.Book;
   isCurrent: boolean;
   setCurrentBookId: (id: t.BookId) => void;
@@ -12,7 +12,7 @@ function BookListItem({
   book,
   isCurrent,
   setCurrentBookId,
-}: IBookListItemProps) {
+}: BookListItemProps) {
   return (
     <div
       className={"book-list-item " + (isCurrent ? "current" : "")}
@@ -23,7 +23,7 @@ function BookListItem({
   );
 }
 
-interface IBookListProps {
+interface BookListProps {
   bookList: t.Book[];
   currentBookId: t.BookId;
   setCurrentBookId: (id: t.BookId) => void;
@@ -33,7 +33,7 @@ export default function BookList({
   bookList,
   currentBookId,
   setCurrentBookId,
-}: IBookListProps) {
+}: BookListProps) {
   return (
     <div className="book-list">
       <h2 className="heading">Select a book</h2>

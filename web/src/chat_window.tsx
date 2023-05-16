@@ -28,43 +28,43 @@ async function askQuestion(
   dispatch({ type: "add", entry: entry });
 }
 
-interface IAskBarProps {
+interface AskBarProps {
   bookId: t.BookId;
   history: t.History;
   dispatchHistory: (action: t.HistoryAction) => void;
 }
 
-export function AskBar({ bookId, history, dispatchHistory }: IAskBarProps) {
-  const input_ref = useRef<HTMLInputElement>(null);
-  const onSubmit = (e: React.FormEvent) => {
+export function AskBar({ bookId, dispatchHistory }: AskBarProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const question = input_ref.current.value;
-    input_ref.current.value = "";
-    askQuestion(bookId, question, dispatchHistory);
+    const question = inputRef.current?.value;
+    if (!question) return;
+    inputRef.current.value = "";
+    await askQuestion(bookId, question, dispatchHistory);
   };
 
   const onKeyUp = (e: React.KeyboardEvent) => {
-    // when press up, bring up the previous question
     if (e.key !== "ArrowUp") return;
-    if (input_ref.current.value !== "") return;
+    if (inputRef.current?.value !== "") return;
     const last = history[0];
-    if (last === undefined) return;
-
-    input_ref.current.value = last.question;
+    if (!last) return;
+    inputRef.current.value = last.question;
   };
 
   return (
     <form className="ask-bar" onSubmit={onSubmit}>
-      <input type="text" ref={input_ref} onKeyUp={onKeyUp} />
+      <input type="text" ref={inputRef} onKeyUp={onKeyUp} />
       <button>Ask</button>
     </form>
   );
 }
 
-interface IChatWindowProps {
+interface ChatWindowProps {
   bookId: t.BookId;
 }
-export function ChatWindow({ bookId }: IChatWindowProps) {
+export function ChatWindow({ bookId }: ChatWindowProps) {
   const [history, dispatchHistory] = useReducer(historyReducer, []);
 
   useEffect(() => {
