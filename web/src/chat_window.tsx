@@ -19,16 +19,22 @@ function historyReducer(history: t.History, action: t.HistoryAction) {
 }
 
 interface ChatWindowProps {
-  bookId: t.BookId;
+  bookId: t.BookId | null;
 }
 export function ChatWindow({ bookId }: ChatWindowProps) {
-  const [history, dispatchHistory] = useReducer(historyReducer, []);
+  const [history, dispatchHistory] = useReducer(historyReducer, null);
 
   useEffect(() => {
     listHistory(bookId).then((history) =>
       dispatchHistory({ type: "init", history })
     );
   }, [bookId]);
+
+  if (!bookId)
+    return <div className="chat-window unavailable">Select a book.</div>;
+
+  if (!history)
+    return <div className="chat-window unavailable">Loading history...</div>;
 
   return (
     <div className="chat-window">

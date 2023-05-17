@@ -9,15 +9,20 @@ import BookList from "./book_list";
 
 import * as t from "./types";
 
+async function initBookList({ setBookList, setCurrentBookId }) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const books = await listBooks();
+  setBookList(books);
+  setCurrentBookId(books[0]?.id);
+}
+
 export default function App() {
-  const [bookList, setBookList] = useState<t.Book[]>([]);
-  const [currentBookId, setCurrentBookId] = useState<t.BookId>(null);
+  const [bookList, setBookList] = useState<t.Book[] | null>(null);
+  const [currentBookId, setCurrentBookId] = useState<t.BookId | null>(null);
 
   useEffect(() => {
-    listBooks().then((books) => {
-      setCurrentBookId(books[0]?.id);
-      setBookList(books);
-    });
+    initBookList({ setBookList, setCurrentBookId });
   }, []);
 
   return (

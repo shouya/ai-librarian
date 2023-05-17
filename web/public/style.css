@@ -39,8 +39,8 @@ html {
 .book-list-item {
   margin: 3px;
   cursor: pointer;
-  line-height: 4em;
-  font-size: 1.2em;
+  line-height: 3em;
+  font-size: 1em;
   text-align: center;
 }
 .book-list-item:hover {
@@ -56,6 +56,10 @@ html {
   flex-direction: column;
   display: flex;
   flex: 5;
+}
+.chat-window.unavailable {
+  text-align: center;
+  justify-content: center;
 }
 
 .history-backlog {

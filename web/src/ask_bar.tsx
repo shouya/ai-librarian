@@ -20,7 +20,7 @@ interface AskBarProps {
   dispatchHistory: (action: t.HistoryAction) => void;
 }
 
-export function AskBar({ bookId, dispatchHistory }: AskBarProps) {
+export function AskBar({ bookId, history, dispatchHistory }: AskBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,9 @@ export function AskBar({ bookId, dispatchHistory }: AskBarProps) {
     if (e.key !== "ArrowUp") return;
     if (inputRef.current?.value !== "") return;
     const last = history[0];
+
     if (!last) return;
+
     inputRef.current.value = last.question;
   };
 

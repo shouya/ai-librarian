@@ -24,8 +24,8 @@ function BookListItem({
 }
 
 interface BookListProps {
-  bookList: t.Book[];
-  currentBookId: t.BookId;
+  bookList: t.Book[] | null;
+  currentBookId: t.BookId | null;
   setCurrentBookId: (id: t.BookId) => void;
 }
 
@@ -34,6 +34,15 @@ export default function BookList({
   currentBookId,
   setCurrentBookId,
 }: BookListProps) {
+  if (!bookList) {
+    return (
+      <div className="book-list">
+        <h2 className="heading">Select a book</h2>
+        <div>{"Loading..."}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="book-list">
       <h2 className="heading">Select a book</h2>
