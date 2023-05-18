@@ -50,7 +50,7 @@ class Indexer:
         print("Book loaded.")
 
         docs = self.loader.to_docs()
-        print("Book fragments generated.")
+        print(f"Book fragments generated ({len(docs)}).")
 
         self.embedder.embed_docs(docs)
         print("Embedding generated.")
