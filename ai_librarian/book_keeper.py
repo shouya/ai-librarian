@@ -77,6 +77,7 @@ class BookKeeper:
 
     def delete_book(self, book_id):
         """Remove a book from the book keeper and delete its index."""
+        self.clear_chat_logs(book_id)
         self.deregister_book(book_id)
         Indexer.unindex(book_id)
 
@@ -111,6 +112,17 @@ class BookKeeper:
             WHERE book_id = ? AND log_id = ?
             """,
             (book_id, log_id),
+        )
+        self.conn.commit()
+
+    def clear_chat_logs(self, book_id):
+        """Remove all chat logs for a book."""
+        self.conn.execute(
+            """
+            DELETE FROM chat_logs
+            WHERE book_id = ?
+            """,
+            (book_id,),
         )
         self.conn.commit()
 
