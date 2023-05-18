@@ -9,8 +9,9 @@ from .util import get_book_dir, get_embedder
 
 class Indexer:
     @staticmethod
-    def unindex(book_dir):
-        """Unindex a book."""
+    def unindex(book_id):
+        """Remove a book from index as if it never existed."""
+        book_dir = get_book_dir(book_id)
         shutil.rmtree(book_dir)
 
     def __init__(self, book_file):
