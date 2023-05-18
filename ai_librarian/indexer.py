@@ -51,6 +51,8 @@ class Indexer:
 
         docs = self.loader.to_docs()
         print(f"Book fragments generated ({len(docs)}).")
+        if len(docs) == 0:
+            raise ValueError("No fragments generated. Index failed.")
 
         self.embedder.embed_docs(docs)
         print("Embedding generated.")
