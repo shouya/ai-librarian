@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, make_response
 import tempfile
 
 from .librarian import Librarian
-from .record_keeper import RecordKeeper
+from .book_keeper import BookKeeper
 
 app = Flask(__name__, static_folder="../web/dist/")
 
@@ -14,28 +14,22 @@ def index():
 
 @app.route("/api/books", methods=["GET"])
 def list_books():
-    return jsonify(RecordKeeper.instance().list_books())
+    return jsonify(BookKeeper.instance().list_books())
 
 
 @app.route("/api/books", methods=["POST"])
 def upload_book():
-    title = request.form.get("title")
-    if not title:
+    name = request.form.get("name")
+    if not name:
         raise ValueError("title is required")
 
     with tempfile.NamedTemporaryFile() as f:
-        print(f)
         request.files["book"].save(f.name)
-        book = Librarian.from_file(f.name)
+        book_id = BookKeeper.instance().add_book(name, f.name)
 
-    all_books = RecordKeeper.instance().list_books()
-    if any(book.book_id == b["book_id"] for b in all_books):
-        raise ValueError("Book already exists")
-
-    RecordKeeper.instance().add_book(title, book.book_id)
     resp = {
-        "book_id": book.book_id,
-        "title": title,
+        "book_id": book_id,
+        "name": name,
     }
     return jsonify(resp)
 
@@ -46,18 +40,18 @@ def ask(book_id):
     if not question:
         raise ValueError("q is required")
 
-    librarian = RecordKeeper.instance().get_librarian(book_id)
+    librarian = BookKeeper.instance().get_librarian(book_id)
     return librarian.ask_question_logged(question)
 
 
 @app.route("/api/books/<book_id>/history", methods=["GET"])
 def history(book_id):
-    return RecordKeeper.instance().list_chat_logs(book_id)
+    return BookKeeper.instance().list_chat_logs(book_id)
 
 
 @app.route("/api/books/<book_id>/history/<log_id>", methods=["DELETE"])
 def remove_history(book_id, log_id):
-    RecordKeeper.instance().remove_chat_log(book_id, log_id)
+    BookKeeper.instance().remove_chat_log(book_id, log_id)
     return "OK"
 
 

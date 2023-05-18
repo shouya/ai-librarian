@@ -84,7 +84,7 @@ class Librarian:
 
     def ask_question_logged(self, question):
         """Ask the librarian a question and log it."""
-        from .record_keeper import RecordKeeper
+        from .book_keeper import BookKeeper
 
         resp = self.ask_question_raw(question)
 
@@ -101,7 +101,7 @@ class Librarian:
             "rel_docs": rel_docs,
         }
 
-        keeper = RecordKeeper.instance()
+        keeper = BookKeeper.instance()
         keeper.add_chat_log(self.book_id, log_id, question, answer, extra)
 
         return {
