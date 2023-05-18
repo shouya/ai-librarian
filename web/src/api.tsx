@@ -8,6 +8,28 @@ export async function listBooks(): Promise<Book[]> {
   });
 }
 
+export async function uploadBook(
+  { title, book }: { title: string; book: File },
+): Promise<Book> {
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("book", book);
+  
+  const resp = await fetch("/api/books", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (resp.status !== 200) {
+    const error = (await resp.json()).error?.message || "Unknown error";
+    throw new Error(error);
+  }
+
+  const json = await resp.json();
+  return { id: json.book_id, title: json.name } as Book;
+}
+
+
 export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
   if (bookId === null || bookId === undefined) {
     return [];

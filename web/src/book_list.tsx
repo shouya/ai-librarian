@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 
+import { uploadBook } from "./api";
 import * as t from "./types";
 
 interface BookListItemProps {
@@ -23,6 +25,50 @@ function BookListItem({
   );
 }
 
+async function onUploadBook(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+
+  const formData = new FormData(e.currentTarget);
+  const title = formData.get("title");
+  const book = formData.get("book");
+  if (!(title && book)) {
+    toast.error("Missing title or book");
+    return;
+  }
+
+  try {
+    await uploadBook({ title: title as string, book: book as File });
+    window.location.reload();
+  } catch (e) {
+    toast.error(e.message);
+  }
+}
+
+function UploadBookModal({ setShowModal }: { setShowModal: (b: boolean) => void }) {
+  return (
+    <div className="modal">
+      <div className="modal-content">
+        <span className="close" onClick={() => setShowModal(false)}>
+          &times;
+        </span>
+        <h2>Upload a Book</h2>
+        <form onSubmit={e => onUploadBook(e)}>
+          <div>
+            <label htmlFor="title">Title:</label>
+            <input type="text" id="title" name="title" />
+          </div>
+          <div>
+            <label htmlFor="book">Book:</label>
+            <input type="file" id="book" name="book" />
+          </div>
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
 interface BookListProps {
   bookList: t.Book[] | null;
   currentBookId: t.BookId | null;
@@ -34,6 +80,8 @@ export default function BookList({
   currentBookId,
   setCurrentBookId,
 }: BookListProps) {
+  const [showModal, setShowModal] = useState(false);
+
   if (!bookList) {
     return (
       <div className="book-list">
@@ -43,8 +91,12 @@ export default function BookList({
     );
   }
 
-  return (
+  return <>
+    {showModal && <UploadBookModal setShowModal={setShowModal} />}
     <div className="book-list">
+      <h2 className="upload-heading">
+        <button onClick={() => setShowModal(true)}>Upload</button>
+      </h2>
       <h2 className="heading">Select a book</h2>
       {bookList.map((book) => (
         <BookListItem
@@ -55,5 +107,5 @@ export default function BookList({
         />
       ))}
     </div>
-  );
+  </>;
 }

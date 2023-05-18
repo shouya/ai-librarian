@@ -35,6 +35,15 @@ html {
   font-size: 1.2em;
   text-align: center;
 }
+.book-list > .upload-heading {
+  margin: 3px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #000;
+  line-height: 2em;
+  font-size: 1.2em;
+  text-align: center;
+}
 
 .book-list-item {
   margin: 3px;
@@ -196,4 +205,59 @@ html {
   appearance: none;
   background-color: #bbb;
   height: 2em;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal .modal-content {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 80vw;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: scroll;
+  box-shadow: 0 0 10px #000;
+}
+
+.modal-content .close {
+  cursor: pointer;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  float: right;
+}
+.modal-content .close:hover {
+  color: #000;
+}
+.modal-content h2 {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+.modal-content form > div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.modal-content form > div > label {
+  margin-right: 10px;
+  width: 100px;
+}
+.modal-content form > div > input {
+  flex-grow: 1;
 }
