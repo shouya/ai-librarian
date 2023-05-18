@@ -6,21 +6,21 @@ import os
 from .const import LIBRARIAN_DIR
 
 
-class Library:
-    """Library is a class that manages the database of books and chat logs."""
+class RecordKeeper:
+    """RecordKeeper is a class that manages the database of books and chat logs."""
 
     _instance = None
 
     @staticmethod
     def instance():
-        """Get the singleton instance of the library."""
-        if Library._instance is None:
-            Library._instance = Library()
-        return Library._instance
+        """Get the singleton instance of the record keeper."""
+        if RecordKeeper._instance is None:
+            RecordKeeper._instance = RecordKeeper()
+        return RecordKeeper._instance
 
     def __init__(self, conf_dir=LIBRARIAN_DIR):
-        """Initialize the library with the path to the configuration directory."""
-        db_path = os.path.expanduser(conf_dir + "/library.db")
+        """Initialize the record keeper with the path to the configuration directory."""
+        db_path = os.path.expanduser(conf_dir + "/record keeper.db")
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.create_schema()
 
@@ -51,7 +51,7 @@ class Library:
         self.conn.commit()
 
     def add_book(self, name, book_id):
-        """Add a book to the library."""
+        """Add a book to the record keeper."""
         self.conn.execute(
             """
             INSERT INTO books (name, book_id)
@@ -62,7 +62,7 @@ class Library:
         self.conn.commit()
 
     def add_chat_log(self, book_id, log_id, question, answer, extra):
-        """Add a chat log to the library."""
+        """Add a chat log to the record keeper."""
         extra = json.dumps(extra)
         self.conn.execute(
             """
@@ -74,7 +74,7 @@ class Library:
         self.conn.commit()
 
     def remove_chat_log(self, book_id, log_id):
-        """Remove a chat log from the library."""
+        """Remove a chat log from the record keeper."""
         self.conn.execute(
             """
             DELETE FROM chat_logs
@@ -85,7 +85,7 @@ class Library:
         self.conn.commit()
 
     def list_books(self) -> List[dict]:
-        """List all books in the library."""
+        """List all books in the record keeper."""
         cursor = self.conn.execute(
             """
             SELECT book_id, name
@@ -120,7 +120,7 @@ class Library:
         ]
 
     def register_book(self, book_name, path_to_book):
-        """Register a new book to the library."""
+        """Register a new book to the record keeper."""
         from .librarian import Librarian
 
         librarian = Librarian.from_file(path_to_book)
@@ -148,7 +148,7 @@ class Library:
 
 
 if __name__ == "__main__":
-    lib = Library()
+    lib = RecordKeeper()
     lib.add_book(
         "A Sport and a Pastime", "5aaab36d14b7f88f326d537e395ffab9"
     )

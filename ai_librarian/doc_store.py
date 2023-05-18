@@ -66,6 +66,11 @@ class ChromaDocStore(VectorDocStore):
             ids.append(doc.id)
             embeddings.append(doc.embedding)
 
+        print(documents)
+        print(metadatas)
+        print(ids)
+        print(embeddings)
+
         coll = self.collection()
         coll.add(
             documents=documents,

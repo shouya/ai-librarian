@@ -13,7 +13,6 @@ from .loader import EpubBookLoader
 from .embedder import OpenAIEmbedder
 from .doc_store import ChromaDocStore
 from .retriever import ContextualBookRetriever
-from .library import Library
 
 
 class Librarian:
@@ -135,6 +134,8 @@ class Librarian:
 
     def ask_question_logged(self, question):
         """Ask the librarian a question and log it."""
+        from .record_keeper import RecordKeeper
+
         resp = self.ask_question_raw(question)
 
         answer = resp.get("answer")
@@ -150,8 +151,8 @@ class Librarian:
             "rel_docs": rel_docs,
         }
 
-        library = Library.instance()
-        library.add_chat_log(self.book_id, log_id, question, answer, extra)
+        keeper = RecordKeeper.instance()
+        keeper.add_chat_log(self.book_id, log_id, question, answer, extra)
 
         return {
             "question": question,
