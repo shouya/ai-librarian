@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify, make_response
+import os
 import tempfile
+
+from flask import Flask, request, jsonify, make_response
 
 from .librarian import Librarian
 from .book_keeper import BookKeeper
@@ -23,7 +25,9 @@ def upload_book():
     if not name:
         raise ValueError("title is required")
 
-    with tempfile.NamedTemporaryFile() as f:
+    ext_name = os.path.splitext(request.files["book"].filename)[1]
+    with tempfile.NamedTemporaryFile(suffix=ext_name) as f:
+        print(f.name)
         request.files["book"].save(f.name)
         book_id = BookKeeper.instance().add_book(name, f.name)
 
