@@ -47,16 +47,32 @@ html {
 
 .book-list-item {
   margin: 3px;
-  cursor: pointer;
   line-height: 3em;
-  font-size: 1em;
-  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
+.book-list-item .book-title {
+  text-align: left;
+  padding-left: 10px;
+  cursor: pointer;
+}
+
+.book-list-item .delete-button {
+  flex: 0;
+  margin-right: 10px;
+  cursor: pointer;
+  color: #aaa;
+}
+.book-list-item .delete-button:hover {
+  color: #222;
+}
+
 .book-list-item:hover {
   /* overrides .current */
   background-color: #ddd !important;
 }
-
 .book-list-item.current {
   background-color: #eee;
 }

@@ -2,6 +2,8 @@ import { BookId, Book, HistoryEntry, HistoryEntryId } from "./types";
 
 export async function listBooks(): Promise<Book[]> {
   const resp = await fetch("/api/books");
+  await handleErrorResp(resp);
+
   const json = await resp.json();
   return json.map((book: any) => {
     return { id: book.book_id, title: book.name } as Book;
@@ -24,13 +26,20 @@ export async function uploadBook({
     body: formData,
   });
 
-  if (resp.status !== 200) {
-    const error = (await resp.json()).error?.message || "Unknown error";
-    throw new Error(error);
-  }
+  await handleErrorResp(resp);
 
   const json = await resp.json();
   return { id: json.book_id, title: json.name } as Book;
+}
+
+export async function deleteBook(bookId: BookId): Promise<void> {
+  if (bookId === null || bookId === undefined) {
+    return;
+  }
+
+  const url = `/api/books/${bookId}`;
+  const resp = await fetch(url, { method: "DELETE" });
+  await handleErrorResp(resp);
 }
 
 export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
@@ -39,6 +48,8 @@ export async function listHistory(bookId: BookId): Promise<HistoryEntry[]> {
   }
 
   const resp = await fetch(`/api/books/${bookId}/history`);
+  await handleErrorResp(resp);
+
   const json = await resp.json();
 
   return json
@@ -94,4 +105,11 @@ export async function ask(
     references: entry.rel_docs || [],
     id: entry.log_id,
   } as HistoryEntry;
+}
+
+async function handleErrorResp(resp: Response) {
+  if (resp.status !== 200) {
+    const error = (await resp.json()).error?.message || "Unknown error";
+    throw new Error(error);
+  }
 }

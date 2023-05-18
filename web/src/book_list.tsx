@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 
-import { uploadBook } from "./api";
+import { uploadBook, deleteBook } from "./api";
 import * as t from "./types";
 
 interface BookListItemProps {
   book: t.Book;
   isCurrent: boolean;
   setCurrentBookId: (id: t.BookId) => void;
+  onDeleteBook: () => void;
 }
 
 function BookListItem({
@@ -20,14 +21,17 @@ function BookListItem({
       className={"book-list-item " + (isCurrent ? "current" : "")}
       onClick={() => setCurrentBookId(book.id)}
     >
-      {book.title}
+      <div className="book-title">{book.title}</div>
+      <div className="delete-button" onClick={() => onDeleteBook(book.id)}>
+        &times;
+      </div>
     </div>
   );
 }
 
 async function onUploadBook(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
-  
+
   const formData = new FormData(e.currentTarget);
   const title = formData.get("title");
   const book = formData.get("book");
@@ -44,7 +48,24 @@ async function onUploadBook(e: React.FormEvent<HTMLFormElement>) {
   }
 }
 
-function UploadBookModal({ setShowModal }: { setShowModal: (b: boolean) => void }) {
+async function onDeleteBook(id: t.BookId) {
+  if (!window.confirm("Are you sure you want to delete this book?")) {
+    return;
+  }
+
+  try {
+    await deleteBook(id);
+    window.location.reload();
+  } catch (e) {
+    toast.error(e.message);
+  }
+}
+
+interface UploadBookModalProps {
+  setShowModal: (b: boolean) => void;
+}
+
+function UploadBookModal({ setShowModal }: UploadBookModalProps) {
   return (
     <div className="modal">
       <div className="modal-content">
@@ -52,7 +73,7 @@ function UploadBookModal({ setShowModal }: { setShowModal: (b: boolean) => void 
           &times;
         </span>
         <h2>Upload a Book</h2>
-        <form onSubmit={e => onUploadBook(e)}>
+        <form onSubmit={(e) => onUploadBook(e)}>
           <div>
             <label htmlFor="title">Title:</label>
             <input type="text" id="title" name="title" />
@@ -68,7 +89,6 @@ function UploadBookModal({ setShowModal }: { setShowModal: (b: boolean) => void 
   );
 }
 
-
 interface BookListProps {
   bookList: t.Book[] | null;
   currentBookId: t.BookId | null;
@@ -81,6 +101,7 @@ export default function BookList({
   setCurrentBookId,
 }: BookListProps) {
   const [showModal, setShowModal] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
 
   if (!bookList) {
     return (
@@ -91,21 +112,24 @@ export default function BookList({
     );
   }
 
-  return <>
-    {showModal && <UploadBookModal setShowModal={setShowModal} />}
-    <div className="book-list">
-      <h2 className="upload-heading">
-        <button onClick={() => setShowModal(true)}>Upload</button>
-      </h2>
-      <h2 className="heading">Select a book</h2>
-      {bookList.map((book) => (
-        <BookListItem
-          key={book.id}
-          book={book}
-          isCurrent={book.id === currentBookId}
-          setCurrentBookId={setCurrentBookId}
-        />
-      ))}
-    </div>
-  </>;
+  return (
+    <>
+      {showModal && <UploadBookModal setShowModal={setShowModal} />}
+      <div className="book-list">
+        <h2 className="upload-heading">
+          <button onClick={() => setShowModal(true)}>Upload</button>
+        </h2>
+        <h2 className="heading">Select a book</h2>
+        {bookList.map((book) => (
+          <BookListItem
+            key={book.id}
+            book={book}
+            isCurrent={book.id === currentBookId}
+            setCurrentBookId={setCurrentBookId}
+            onDeleteBook={() => onDeleteBook(book.id)}
+          />
+        ))}
+      </div>
+    </>
+  );
 }

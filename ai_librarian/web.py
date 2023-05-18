@@ -38,6 +38,12 @@ def upload_book():
     return jsonify(resp)
 
 
+@app.route("/api/books/<book_id>", methods=["DELETE"])
+def delete_book(book_id):
+    BookKeeper.instance().delete_book(book_id)
+    return jsonify({"status": "success"})
+
+
 @app.route("/api/books/<book_id>/ask", methods=["POST"])
 def ask(book_id):
     question = request.args.get("q")
