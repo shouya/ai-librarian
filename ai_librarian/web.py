@@ -25,6 +25,12 @@ def upload_book():
     if not name:
         raise ValueError("title is required")
 
+    if "book" not in request.files:
+        raise ValueError("invalid book file")
+
+    if request.files["book"].filename == "":
+        raise ValueError("book is empty")
+
     ext_name = os.path.splitext(request.files["book"].filename)[1]
     with tempfile.NamedTemporaryFile(suffix=ext_name) as f:
         print(f.name)
