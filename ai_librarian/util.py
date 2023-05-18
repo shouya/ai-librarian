@@ -7,7 +7,8 @@ from .embedder import OpenAIEmbedder
 
 def get_book_dir(book_id: str) -> str:
     """Get the directory for the book."""
-    return os.path.join(LIBRARIAN_DIR, book_id)
+    book_dir = os.path.join(LIBRARIAN_DIR, "book")
+    return os.path.join(book_dir, book_id)
 
 
 def get_embedder() -> Embedder:

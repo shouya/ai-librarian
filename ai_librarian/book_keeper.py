@@ -4,6 +4,7 @@ import json
 import os
 
 from .const import LIBRARIAN_DIR
+from .indexer import Indexer
 
 
 class BookKeeper:
@@ -20,7 +21,7 @@ class BookKeeper:
 
     def __init__(self, conf_dir=LIBRARIAN_DIR):
         """Initialize the book keeper with the path to the configuration directory."""
-        db_path = os.path.expanduser(conf_dir + "/book keeper.db")
+        db_path = os.path.expanduser(conf_dir + "/library.db")
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.create_schema()
 
@@ -61,7 +62,7 @@ class BookKeeper:
         indexer.index(force=True)
 
         self.register_book(name, book_id)
-        return book_id    
+        return book_id
 
     def deregister_book(self, book_id):
         """Remove a book from the book keeper."""
@@ -147,14 +148,6 @@ class BookKeeper:
             }
             for log_id, question, answer, extra in cursor.fetchall()
         ]
-
-    def register_book(self, book_name, path_to_book):
-        """Register a new book to the book keeper."""
-        from .librarian import Librarian
-
-        librarian = Librarian.from_file(path_to_book)
-        librarian.reload_book()
-        self.add_book(book_name, librarian.book_id)
 
     def book_exists(self, book_id):
         """Check if a book exists."""
