@@ -7,24 +7,6 @@ from typing import List, Any
 from .base import VectorDocStore, Document, DocId, Embedding
 
 
-class BookStoreFactory:
-    @staticmethod
-    def readonly(book_id, book_dir) -> VectorDocStore:
-        """Get the document store."""
-        collection_name = f"librarian-{book_id}"
-        store_dir = os.path.join(book_dir, "store")
-        return ChromaDocStore.new_local_readonly(
-            collection_name, store_dir
-        )
-
-    @staticmethod
-    def mutable(book_id, book_dir) -> VectorDocStore:
-        """Get the document store."""
-        collection_name = f"librarian-{book_id}"
-        store_dir = os.path.join(book_dir, "store")
-        return ChromaDocStore.new_local(collection_name, store_dir)
-
-
 class ChromaDocStore(VectorDocStore):
     """A document store backed by ChromaDB."""
 
@@ -32,9 +14,7 @@ class ChromaDocStore(VectorDocStore):
     collection_name: str
 
     @staticmethod
-    def new_local(
-        collection_name: str, persist_directory: str
-    ) -> ChromaDocStore:
+    def new_local(collection_name: str, persist_directory: str):
         """Create a new ChromaDocStore backed by a local directory."""
         settings = chromadb.config.Settings(
             chroma_db_impl="duckdb+parquet",
@@ -47,7 +27,7 @@ class ChromaDocStore(VectorDocStore):
     @staticmethod
     def new_local_readonly(
         collection_name: str, persistent_directory: str
-    ) -> ChromaDocStore:
+    ):
         """Create a readonly ChromaDocStore backed by a local directory."""
         store = ChromaDocStore.new_local(
             collection_name, persistent_directory
@@ -94,6 +74,9 @@ class ChromaDocStore(VectorDocStore):
         """Save documents to the store."""
         if self.readonly:
             raise Exception("Cannot put documents in a readonly store.")
+
+        if len(docs) == 0:
+            return
 
         documents = []
         metadatas = []
@@ -188,3 +171,21 @@ def _results_to_docs(results: Any) -> List[Document]:
 
 def dummy_embedding(_any):
     raise NotImplementedError("should be unreachable!")
+
+
+class BookStoreFactory:
+    @staticmethod
+    def readonly(book_id, book_dir) -> VectorDocStore:
+        """Get the document store."""
+        collection_name = f"librarian-{book_id}"
+        store_dir = os.path.join(book_dir, "store")
+        return ChromaDocStore.new_local_readonly(
+            collection_name, store_dir
+        )
+
+    @staticmethod
+    def mutable(book_id, book_dir) -> VectorDocStore:
+        """Get the document store."""
+        collection_name = f"librarian-{book_id}"
+        store_dir = os.path.join(book_dir, "store")
+        return ChromaDocStore.new_local(collection_name, store_dir)
