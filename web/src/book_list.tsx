@@ -116,9 +116,6 @@ export default function BookList({
     <>
       {showModal && <UploadBookModal setShowModal={setShowModal} />}
       <div className="book-list">
-        <h2 className="upload-heading">
-          <button onClick={() => setShowModal(true)}>Upload</button>
-        </h2>
         <h2 className="heading">Select a book</h2>
         {bookList.map((book) => (
           <BookListItem
@@ -129,6 +126,9 @@ export default function BookList({
             onDeleteBook={() => onDeleteBook(book.id)}
           />
         ))}
+        <div className="upload-button" onClick={() => setShowModal(true)}>
+          Upload
+        </div>
       </div>
     </>
   );
