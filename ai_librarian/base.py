@@ -75,6 +75,10 @@ class DocStore(ABC):
     def save(self) -> None:
         """Save the document store to disk."""
 
+    @abstractmethod
+    def exists(self) -> bool:
+        """Check if the document store exists."""
+
 
 class VectorDocStore(DocStore):
     @abstractmethod

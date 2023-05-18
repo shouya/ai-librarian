@@ -27,7 +27,7 @@ function BookListItem({
 
 async function onUploadBook(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
-
+  
   const formData = new FormData(e.currentTarget);
   const title = formData.get("title");
   const book = formData.get("book");

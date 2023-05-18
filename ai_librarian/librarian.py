@@ -9,52 +9,24 @@ import uuid
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
 
+from .doc_store import BookStoreFactory
 from .loader import EpubBookLoader
-from .embedder import OpenAIEmbedder
-from .doc_store import ChromaDocStore
 from .retriever import ContextualBookRetriever
+from .const import LIBRARIAN_DIR
+from .util import get_book_dir, get_embedder
 
 
 class Librarian:
     """A librarian that answers questions about a book."""
 
-    @staticmethod
-    def from_file(book_file):
-        """Create a librarian from a book file."""
-        loader = EpubBookLoader(book_file)
-        book_id = loader.book_id()
-
-        book_dir = os.path.expanduser(f"~/.cache/librarian/book/{book_id}")
-        if not os.path.exists(book_dir):
-            os.makedirs(book_dir)
-            shutil.copy(book_file, book_dir)
-
-        return Librarian(book_id, loader)
-
-    def __init__(self, book_id, loader=None):
+    def __init__(self, book_id):
         """Initialize the librarian."""
         self.book_id = book_id
-        self.loader = loader
 
-        self.embedder = OpenAIEmbedder()
+        book_dir = get_book_dir(book_id)
 
-        # make doc store persist in the xdg cache
-        self.book_dir = os.path.expanduser(
-            f"~/.cache/librarian/book/{self.book_id}"
-        )
-
-        store_dir = os.path.join(self.book_dir, "store")
-        if not os.path.exists(store_dir):
-            # calling ChromaDocStore.new_local will create the
-            # store_dir, thus we must check if it exists first
-            self.doc_store = ChromaDocStore.new_local(
-                f"librarian-{self.book_id}", store_dir
-            )
-            self.reload_book()
-        else:
-            self.doc_store = ChromaDocStore.new_local(
-                f"librarian-{self.book_id}", store_dir
-            )
+        self.embedder = get_embedder()
+        self.doc_store = BookStoreFactory.readonly(book_id, book_dir)
 
         self.retriever = ContextualBookRetriever(
             self.embedder, self.doc_store
@@ -101,28 +73,6 @@ class Librarian:
         ]
 
         return chat_prompt
-
-    def reload_book(self):
-        """Reload the book and re-embed it."""
-        if self.loader is None:
-            raise ValueError("Book is read-only.")
-
-        self.doc_store.load()
-        self.doc_store.reset()
-        print("Book index reset.")
-
-        self.loader.load()
-        print("Book loaded.")
-
-        docs = self.loader.to_docs()
-        print("Book fragments generated.")
-
-        self.embedder.embed_docs(docs)
-        print("Embedding generated.")
-
-        self.doc_store.put(docs)
-        self.doc_store.save()
-        print("Book index saved.")
 
     def narrow_down_documents(self, question):
         """Narrow down the documents to a few relevant ones."""
@@ -193,7 +143,7 @@ def setup_readline():
 
     # use readline to get input, save history in ~/.cache/librarian/history
     readline.parse_and_bind("tab: complete")
-    histfile = os.path.expanduser("~/.cache/librarian/history")
+    histfile = os.path.expanduser(f"{LIBRARIAN_DIR}/history")
     try:
         readline.read_history_file(histfile)
         readline.set_history_length(1000)

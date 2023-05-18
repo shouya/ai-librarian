@@ -1,1 +1,1 @@
-LIBRARIAN_DIR = "~/.cache/librarian"
+LIBRARIAN_DIR = os.path.expanduser("~/.cache/librarian")
