@@ -87,7 +87,6 @@ class Librarian:
                 {
                     "answer": "<your answer>",
                     "quote": "<one relevant sentence from book>",
-                    # "refs": ["<ref>", "<more_ref>"],
                 }
             )
             + "\n\nor if you're unable to answer the question, reply with:\n\n"

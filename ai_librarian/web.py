@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
+import tempfile
 
 from .librarian import Librarian
 from .library import Library
@@ -15,6 +16,27 @@ def index():
 def list_books():
     return jsonify(Library.instance().list_books())
 
+@app.route("/api/books", methods=["POST"])
+def upload_book():
+    title = request.form.get("title")
+    if not title:
+        raise ValueError("title is required")
+
+    with tempfile.NamedTemporaryFile() as f:
+        print(f)
+        request.files["book"].save(f.name)
+        book = Librarian.from_file(f.name)
+    
+    all_books = Library.instance().list_books()
+    if any(book.book_id == b["book_id"] for b in all_books):
+        raise ValueError("Book already exists")
+
+    Library.instance().add_book(title, book.book_id)
+    resp = {
+        "book_id": book.book_id,
+        "title": title,
+    }
+    return jsonify(resp)
 
 @app.route("/api/books/<book_id>/ask", methods=["POST"])
 def ask(book_id):
@@ -40,3 +62,16 @@ def remove_history(book_id, log_id):
 @app.route("/<path:static_file>")
 def serve_static_file(static_file):
     return app.send_static_file(static_file)
+
+
+@app.errorhandler(ValueError)
+def handle_exception(e):
+    response = jsonify({
+        'error': {
+            'type': e.__class__.__name__,
+            'message': str(e)
+        }
+    })
+    response.status_code = 400
+
+    return response
