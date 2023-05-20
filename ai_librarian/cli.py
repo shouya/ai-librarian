@@ -1,6 +1,7 @@
 import click
 
 import sys
+import os
 
 from .librarian import Librarian, interactive, interactive_debug_query
 from .indexer import Indexer
@@ -37,9 +38,13 @@ def rebuild(file):
 
 
 @cli.command(help="Start web interface")
-@click.option("-h", "--host", default="127.0.0.1")
-@click.option("-p", "--port", default=5000)
+@click.option(
+    "-h", "--host", default=lambda: os.environ.get("HOST", "127.0.0.1")
+)
+@click.option(
+    "-p", "--port", default=lambda: os.environ.get("PORT", "5000")
+)
 def web(host, port):
     from .web import app
 
-    app.run(host=host, port=port)
+    app.run(host=host, port=int(port))
