@@ -1,5 +1,6 @@
 import os
 import tempfile
+from openai.error import AuthenticationError
 
 from flask import Flask, request, jsonify, make_response
 
@@ -77,6 +78,16 @@ def serve_static_file(static_file):
 
 
 @app.errorhandler(ValueError)
+def handle_exception(e):
+    response = jsonify(
+        {"error": {"type": e.__class__.__name__, "message": str(e)}}
+    )
+    response.status_code = 400
+
+    return response
+
+
+@app.errorhandler(AuthenticationError)
 def handle_exception(e):
     response = jsonify(
         {"error": {"type": e.__class__.__name__, "message": str(e)}}
