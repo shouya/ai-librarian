@@ -1,32 +1,30 @@
-[project]
-name = "ai-librarian"
-version = "0.1.0"
-authors = [
-  { name = "Shou Ya", email = "shouya@users.noreply.github.com" }
-]
-description = "Ask questions about your books"
-license = { file = "COPYING" }
-readme = "README.md"
-requires-python = ">=3.6"
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-  "Operating System :: OS Independent",
-  "Topic :: Communications :: Chat",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Environment :: Console",
-]
-
-[tool.setuptools.packages.find]
-include = ["ai_librarian"]
-namespaces = true
-
-[project.urls]
-homepage = "https://github.com/shouya/ai-librarian"
-
-[project.scripts]
-ai-librarian = "ai_librarian:cli"
-
-
 [tool.black]
 line-length = 75
+
+[tool.poetry]
+name = "ai-librarian"
+version = "0.1.0"
+description = "Ask questions about your books"
+authors = ["Shou Ya <shouya@users.noreply.github.com>"]
+license = "GPLv3"
+readme = "README.md"
+packages = [{include = "ai_librarian"}]
+
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+langchain = { version = "==0.0.157", extras = ["openai"] }
+openai = "*"
+chromadb = { git = "https://github.com/chroma-core/chroma.git", branch = "main" }
+lancedb = "*"
+epub_meta = "*"
+ebooklib = "*"
+beautifulsoup4 = "*"
+pydantic-numpy = "*"
+click = "*"
+Flask = "*"
+gunicorn = "^20.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
