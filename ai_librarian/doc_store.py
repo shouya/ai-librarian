@@ -89,7 +89,7 @@ class ChromaDocStore(VectorDocStore):
                 {k: v for k, v in doc.metadata.items() if v is not None}
             )
             ids.append(doc.id)
-            embeddings.append(doc.embedding)
+            embeddings.append(list(doc.embedding))
 
         print(documents)
         print(metadatas)
